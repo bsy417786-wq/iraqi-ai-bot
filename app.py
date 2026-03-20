@@ -13,10 +13,8 @@ design = """
 
     .stApp { background: #0b141a; color: #e9edef; font-family: 'Segoe UI', sans-serif; }
 
-    /* حاوية المحادثة - رفعناها 350 بكسل حتى ما تنحجب */
-    .stChatContainer { 
-        padding-bottom: 350px !important; 
-    }
+    /* أنيميشن الظهور */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     .chat-row { display: flex; margin: 15px 0; width: 100%; animation: fadeIn 0.4s ease-out; }
     .user-row { justify-content: flex-start; } 
@@ -30,30 +28,35 @@ design = """
     .user-bubble { background-color: #005c4b; color: white; border-bottom-left-radius: 2px; }
     .abbas-bubble { background-color: #202c33; color: white; border-bottom-right-radius: 2px; border: 1px solid #38bdf8; }
 
-    /* صندوق الكتابة - ثابت فوق الفوتر */
+    /* 1. صندوق الكتابة - أقصى الأسفل تماماً */
     div[data-testid="stChatInput"] {
         position: fixed !important;
-        bottom: 130px !important; 
+        bottom: 10px !important; 
         left: 5% !important;
         right: 5% !important;
         width: 90% !important;
-        z-index: 1001 !important;
+        z-index: 1002 !important;
         background: #202c33 !important;
         border: 2px solid #38bdf8 !important;
         border-radius: 12px !important;
     }
 
-    /* الفوتر الثابت (الصور والمعلومات) */
+    /* 2. الفوتر والصور - صعدناهم فوق صندوق الكتابة */
     .fixed-footer {
         position: fixed;
-        bottom: 0; left: 0; width: 100%;
+        bottom: 85px; left: 0; width: 100%;
         background: #0b141a; padding: 10px 0;
-        z-index: 1000; border-top: 1px solid #38bdf8;
+        z-index: 1001; border-top: 1px solid #38bdf8;
         text-align: center;
     }
 
     .footer-imgs { display: flex; justify-content: center; gap: 10px; margin-bottom: 5px; }
     .footer-imgs img { width: 85px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #38bdf8; }
+
+    /* 3. حاوية المحادثة - تنهي قبل الفوتر بمسافة أمان */
+    .stChatContainer { 
+        padding-bottom: 280px !important; 
+    }
     </style>
 """
 st.markdown(design, unsafe_allow_html=True)
@@ -61,12 +64,12 @@ st.markdown(design, unsafe_allow_html=True)
 # 2. الهوية
 st.markdown("<h2 style='text-align:center; color:#38bdf8;'>🎮 عباس حيدر للتقنية</h2>", unsafe_allow_html=True)
 
-# 3. الذاكرة والـ Key
+# 3. الذاكرة
 MY_KEY = "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"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. عرض المحادثة (يسار ويمين)
+# 4. عرض المحادثة
 for msg in st.session_state.messages:
     side = "user-row" if msg["role"] == "user" else "abbas-row"
     bubble = "user-bubble" if msg["role"] == "user" else "abbas-bubble"
@@ -75,18 +78,16 @@ for msg in st.session_state.messages:
 
 # 5. منطق الإدخال والرد
 if prompt := st.chat_input("تفضل بسؤالك يا وحش..."):
-    # إضافة رسالة المستخدم وعرضها
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 أنت:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
     
-    # طلب الرد من السيرفر
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
     context = (
         "أنت عباس حيدر، خبير تقني وصاحب متجر في بغداد - شارع الصناعة. "
         "تتحدث بلغة عربية فصحى رزينة مع لمسات عراقية (عيوني، تدلل، يا بطل، لوز). "
-        "ممنوع استخدام لهجات أخرى. التوصيل متاح 24/7."
+        "التوصيل متاح 24/7."
     )
     
     payload = {
@@ -105,9 +106,9 @@ if prompt := st.chat_input("تفضل بسؤالك يا وحش..."):
         st.session_state.messages.append({"role": "assistant", "content": ans})
         st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 عباس حيدر:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
-        st.error("السيرفر مشغول شوية عيوني، انتظر ثانية وجرب مرة ثانية!")
+        st.error("السيرفر مشغول شوية عيوني، جرب مرة ثانية!")
 
-# 6. الفوتر الثابت
+# 6. الفوتر الثابت (صعدناه فوق صندوق الكتابة)
 st.markdown("""
     <div class="fixed-footer">
         <div style="color:#facc15; font-size:13px; font-weight:bold; margin-bottom:5px;">
