@@ -11,7 +11,7 @@ design = """
         visibility: hidden; display: none !important; 
     }
 
-    /* خلفية الدارك مود الفخمة */
+    /* خلفية الدارك مود */
     .stApp { background: #0b141a; color: #e9edef; }
 
     /* أنيميشن الظهور التدريجي */
@@ -20,62 +20,55 @@ design = """
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* تنسيق فقاعات الدردشة (مثل الواتساب) */
-    [data-testid="stChatMessage"] {
-        background: transparent !important;
-        animation: fadeIn 0.4s ease-in-out;
-    }
-
-    /* فقاعة المستخدم (يسار) */
-    div[data-testid="stChatMessage"]:has(img[alt="user-avatar"]), 
-    div[data-testid="stChatMessage"]:nth-child(even) {
-        flex-direction: row-reverse;
-        text-align: left;
+    /* تنسيق الحاويات لليمين واليسار */
+    .chat-row {
+        display: flex;
+        margin: 10px 0;
+        width: 100%;
+        animation: fadeIn 0.5s ease-out forwards;
     }
     
-    /* ستايل الكلام داخل الفقاعة */
-    .stMarkdown {
-        padding: 10px 15px;
-        border-radius: 15px;
-        display: inline-block;
-        max-width: 80%;
+    .user-row { justify-content: flex-start; } /* المستخدم يسار */
+    .abbas-row { justify-content: flex-end; }  /* عباس يمين */
+
+    .bubble {
+        padding: 12px 18px;
+        border-radius: 18px;
+        max-width: 75%;
+        font-size: 16px;
+        line-height: 1.5;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    /* صندوق الكتابة (ثابت فوق الصور) */
+    .user-bubble { background-color: #005c4b; color: white; border-bottom-left-radius: 2px; }
+    .abbas-bubble { background-color: #202c33; color: white; border-bottom-right-radius: 2px; border: 1px solid #38bdf8; }
+
+    /* صندوق الكتابة في الأسفل فوق الفوتر */
     div[data-testid="stChatInput"] {
         position: fixed !important;
-        bottom: 140px !important;
-        z-index: 1000 !important;
+        bottom: 120px !important;
+        z-index: 1001 !important;
         background: #202c33 !important;
         border: 1px solid #38bdf8 !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
     }
 
-    /* الصور الثابتة (أسفل الكل) */
-    .footer-fixed {
+    /* الفوتر الثابت (الصور) */
+    .fixed-footer {
         position: fixed;
         bottom: 0; left: 0; width: 100%;
-        background: #0b141a;
-        padding: 10px 0;
-        z-index: 999;
-        border-top: 1px solid #202c33;
+        background: #0b141a; padding: 10px 0;
+        z-index: 1000; border-top: 1px solid #202c33;
         text-align: center;
     }
 
-    .footer-imgs {
-        display: flex; justify-content: center; gap: 8px;
-    }
+    .footer-imgs { display: flex; justify-content: center; gap: 8px; }
+    .footer-imgs img { width: 100px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #38bdf8; }
 
-    .footer-imgs img {
-        width: 100px; height: 60px; object-fit: cover;
-        border-radius: 5px; border: 1px solid #38bdf8;
-    }
-
-    /* مسافة حتى المحادثة ما تندفن */
     .stChatContainer { padding-bottom: 250px !important; }
 
-    /* النقاط اللي ترمش */
-    .typing { display: flex; gap: 4px; padding: 10px; }
+    /* أنيميشن النقاط */
+    .typing { display: flex; gap: 4px; padding: 5px; }
     .dot { width: 6px; height: 6px; background: #38bdf8; border-radius: 50%; animation: blink 1.4s infinite; }
     @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
     </style>
@@ -83,62 +76,54 @@ design = """
 st.markdown(design, unsafe_allow_html=True)
 
 # 2. الهوية
-st.markdown("<h2 style='text-align:center; color:#38bdf8;'>🎮 عباس حيدر - واتساب الكيمنك</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align:center; color:#38bdf8;'>🎮 عباس حيدر - Tech Chat</h2>", unsafe_allow_html=True)
 
 # 3. المفتاح والذاكرة
 MY_KEY = "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"
-ABBAS_AVATAR = "https://i.ibb.co/v66Zz7r/Abbas-Haider-Logo.png"
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. عرض المحادثة (يسار ويمين)
+# 4. عرض المحادثة (اليسار لليوزر واليمين لعباس)
 for msg in st.session_state.messages:
-    side = "assistant" if msg["role"] == "assistant" else "user"
-    avatar = ABBAS_AVATAR if side == "assistant" else "👤"
-    with st.chat_message(side, avatar=avatar):
-        color = "#005c4b" if side == "user" else "#202c33" # ألوان تشبه الواتساب
-        st.markdown(f"<div style='background:{color}; padding:12px; border-radius:12px;'>{msg['content']}</div>", unsafe_allow_html=True)
+    if msg["role"] == "user":
+        st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble">👤 أنت:<br>{msg["content"]}</div></div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble">🎮 عباس حيدر:<br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
-# 5. الإدخال والرد (الشخصية مثل الجيمني)
-if prompt := st.chat_input("سولف وي عباس.."):
+# 5. منطق الإدخال
+if prompt := st.chat_input("سولف وي عباس.. العروض نار!"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user", avatar="👤"):
-        st.markdown(f"<div style='background:#005c4b; padding:12px; border-radius:12px;'>{prompt}</div>", unsafe_allow_html=True)
+    st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble">👤 أنت:<br>{prompt}</div></div>', unsafe_allow_html=True)
 
-    with st.chat_message("assistant", avatar=ABBAS_AVATAR):
-        typing_placeholder = st.empty()
-        typing_placeholder.markdown('<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', unsafe_allow_html=True)
+    # رد عباس
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
+    
+    context = (
+        "أنت عباس حيدر، خبير كمبيوتر عراقي. تتحدث بلهجة بغدادية محترمة ودمك خفيف جداً. "
+        "شجع الزبون على أقوى القطع (RTX 4090، معالجات الجيل الأخير) وقول له عروضنا (لوز) و (نار وشرار). "
+        "أنت ذكي جداً ومثل (جيميني) في الذكاء ولكن بروح عراقية."
+    )
+    
+    payload = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "system", "content": context}] + st.session_state.messages,
+        "temperature": 0.8
+    }
 
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
-        
-        # شخصية عباس (مثلي تماماً)
-        context = (
-            "أنت عباس حيدر، ذكي، دمه خفيف، ومحترف كمبيوتر. "
-            "تتحدث بلهجة عراقية بغدادية أصلية (مثل: عيوني، يا وحش، لوز، نار وشرار، تدلل). "
-            "أسلوبك مشجع جداً وتغري الناس بالعروض القوية للكيمنك. "
-            "أجب باختصار وبطريقة ممتعة كأنك صديق مقرب للزبون."
-        )
-        
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "system", "content": context}] + st.session_state.messages,
-            "temperature": 0.8
-        }
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        ans = response.json()['choices'][0]['message']['content']
+        st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble">🎮 عباس حيدر:<br>{ans}</div></div>', unsafe_allow_html=True)
+        st.session_state.messages.append({"role": "assistant", "content": ans})
+        st.rerun() # لإعادة الترتيب بعد الرد
+    except:
+        st.error("عيني صار لود على السيرفر، جرب مرة ثانية!")
 
-        try:
-            response = requests.post(url, headers=headers, json=payload)
-            ans = response.json()['choices'][0]['message']['content']
-            typing_placeholder.markdown(f"<div style='background:#202c33; padding:12px; border-radius:12px;'>{ans}</div>", unsafe_allow_html=True)
-            st.session_state.messages.append({"role": "assistant", "content": ans})
-        except:
-            typing_placeholder.error("عيني صار عندي خلل بالشبكة، عيد سؤالك!")
-
-# 6. الصور الثابتة (أخر شي بالموقع)
+# 6. الفوتر الثابت (الصور بالأسفل)
 st.markdown("""
-    <div class="footer-fixed">
-        <p style="color:#facc15; font-size:12px; margin-bottom:5px;">🔥 أقوى تجميعات بغداد 🔥</p>
+    <div class="fixed-footer">
+        <p style="color:#facc15; font-size:12px; margin-bottom:5px;">🔥 عروض الكيمنك الأقوى عند عباس حيدر 🔥</p>
         <div class="footer-imgs">
             <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200">
             <img src="https://images.unsplash.com/photo-1603481546238-487240415921?q=80&w=200">
