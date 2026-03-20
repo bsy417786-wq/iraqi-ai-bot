@@ -1,13 +1,12 @@
 import streamlit as st
 import requests
-import time
 
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="اسأل عباس حيدر", page_icon="🎮", layout="centered")
 
 design = """
     <style>
-    /* إخفاء زوائد ستريمليت والـ Manage app */
+    /* إخفاء كل زوائد ستريمليت والـ Manage app */
     #MainMenu, footer, header, .stDeployButton, div[data-testid="stToolbar"], div[data-testid="stDecoration"], [data-testid="stStatusWidget"], iframe[title="manage-app"] { 
         visibility: hidden; display: none !important; 
     }
@@ -16,42 +15,65 @@ design = """
     .stApp { background: #0f172a; color: #f1f5f9; }
 
     .main-header {
-        color: #38bdf8; font-size: 42px; font-weight: 800;
+        color: #38bdf8; font-size: 40px; font-weight: 800;
         text-align: center; margin-top: -30px; letter-spacing: 1px;
     }
 
-    /* فقاعات الدردشة */
+    /* تنسيق منطقة الدردشة حتى ما تندفن تحت الصور الثابتة */
+    .stChatFloatingInputContainer { background-color: rgba(15, 23, 42, 1) !important; }
+    
     [data-testid="stChatMessage"] {
         background: #1e293b !important;
         border: 1px solid #334155 !important;
         border-radius: 12px !important;
-        margin-bottom: 15px !important;
-    }
-    
-    /* أنيميشن النقاط (Typing Indicator) */
-    .typing {
-        display: flex; align-items: center; gap: 5px; padding: 10px;
-    }
-    .dot {
-        width: 8px; height: 8px; background: #38bdf8; border-radius: 50%;
-        animation: blink 1.4s infinite both;
-    }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink {
-        0% { opacity: 0.2; }
-        20% { opacity: 1; }
-        100% { opacity: 0.2; }
+        margin-bottom: 10px !important;
     }
 
-    .stChatInputContainer { padding-bottom: 20px; }
+    /* تثبيت الصور والفوتر بالأسفل (Fixed Footer) */
+    .fixed-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(0deg, #0f172a 80%, transparent 100%);
+        padding: 10px 0;
+        z-index: 999;
+        border-top: 1px solid #1e293b;
+    }
+
+    .footer-content {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .footer-img {
+        width: 150px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #38bdf8;
+    }
+
+    /* إضافة مسافة بالأسفل للمحادثة حتى لا تتغطى بالصور */
+    .stChatContainer { padding-bottom: 180px !important; }
+    
+    /* أنيميشن النقاط */
+    .typing { display: flex; align-items: center; gap: 5px; padding: 5px; }
+    .dot { width: 6px; height: 6px; background: #38bdf8; border-radius: 50%; animation: blink 1.4s infinite both; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
     </style>
 """
 st.markdown(design, unsafe_allow_html=True)
 
 # 2. الهوية
 st.markdown('<div class="main-header">اسأل عباس حيدر</div>', unsafe_allow_html=True)
-st.markdown('<p style="text-align:center; color:#94a3b8;">خبير الكمبيوتر والكيمنك الأول في بغداد</p>', unsafe_allow_html=True)
+st.markdown('<p style="text-align:center; color:#94a3b8; margin-bottom:20px;">خبير الكمبيوتر والكيمنك الأول في بغداد</p>', unsafe_allow_html=True)
 
 # 3. المفتاح والذاكرة
 MY_KEY = "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"
@@ -61,7 +83,7 @@ USER_AVATAR = "👤"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. عرض المحادثة القديمة
+# 4. عرض المحادثة
 for message in st.session_state.messages:
     is_assistant = message["role"] == "assistant"
     avatar = ABBAS_AVATAR if is_assistant else USER_AVATAR
@@ -70,32 +92,23 @@ for message in st.session_state.messages:
         color = "#38bdf8" if is_assistant else "#facc15"
         st.markdown(f"<strong style='color:{color};'>{label}:</strong><br>{message['content']}", unsafe_allow_html=True)
 
-# 5. منطق الإدخال والرد (مع الأنيميشن)
+# 5. منطق الإدخال
 if prompt := st.chat_input("اسأل عباس عن تجميعات الكيمنك أو اللابتوبات..."):
-    # عرض رسالة المستخدم فوراً
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(f"<strong style='color:#facc15;'>أنت:</strong><br>{prompt}", unsafe_allow_html=True)
     
-    # مؤشر "عباس حيدر كاعد يكتب..."
     with st.chat_message("assistant", avatar=ABBAS_AVATAR):
         st.markdown(f"<strong style='color:#38bdf8;'>عباس حيدر:</strong>", unsafe_allow_html=True)
         typing_placeholder = st.empty()
-        # عرض حركة النقاط
-        typing_placeholder.markdown("""
-            <div class="typing">
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-            </div>
-        """, unsafe_allow_html=True)
+        typing_placeholder.markdown('<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', unsafe_allow_html=True)
 
-        # الاتصال بالـ API
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = { "Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json" }
         
         context = (
-            "أنت عباس حيدر، خبير لابتوبات وكمبيوترات كيمنك في بغداد. "
-            "لهجتك عراقية بغدادية محترمة ورزينة. اختصاصك فقط الكمبيوتر. "
-            "أغري الزبون بعروض الكيمنك والقطع القوية وانصحه كأخ."
+            "أنت عباس حيدر، صاحب محل كمبيوترات كيمنك ببغداد. لهجتك عراقية بغدادية محترمة. "
+            "اختصاصك فقط الكمبيوتر. أغري الزبون بالعروض والقطع القوية وانصحه كأخ."
         )
         
         payload = {
@@ -108,23 +121,16 @@ if prompt := st.chat_input("اسأل عباس عن تجميعات الكيمنك
             response = requests.post(url, headers=headers, json=payload)
             result = response.json()
             answer = result['choices'][0]['message']['content']
-            
-            # مسح نقاط التحميل وكتابة الرد الحقيقي
             typing_placeholder.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
         except:
-            typing_placeholder.error("السيرفر مزدحم عيوني، اصبرلي ثانية.")
+            typing_placeholder.error("اصبرلي ثانية عيوني، السيرفر حمل..")
 
-# 6. الفوتر الفخم
-st.markdown('---')
-col1, col2 = st.columns(2)
-with col1:
-    st.image("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=500", caption="احترافية في التجميع")
-with col2:
-    st.image("https://images.unsplash.com/photo-1603481546238-487240415921?q=80&w=500", caption="أقوى قطع الكيمنك")
-
-st.markdown("""
-    <div style="text-align:center; color:#94a3b8; font-size:14px; padding:20px;">
-        📍 بغداد - الصناعة | 📞 07700000000 | © 2026 ABBAS HAIDER
-    </div>
-""", unsafe_allow_html=True)
+# 6. الجزء السفلي الثابت (Fixed Footer)
+st.markdown(f"""
+    <div class="fixed-footer">
+        <div style="text-align:center; color:#facc15; font-size:14px; font-weight:bold; margin-bottom:5px;">
+            💎 عروض الكيمنك والاحتراف بانتظارك 💎
+        </div>
+        <div class="footer-content">
+            <img src="
