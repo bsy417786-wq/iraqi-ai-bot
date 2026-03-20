@@ -1,19 +1,13 @@
 import streamlit as st
-import google.generativeai as genai
-import os
+import requests
+import json
 
 # إعداد واجهة الموقع
-st.set_page_config(page_title="محل عباس حيدر")
+st.set_page_config(page_title="عباس حيدر للابتوبات")
 st.title("💻 مساعد المبيعات: عباس حيدر")
 
-# المفتاح مالتك المباشر (تأكد إنه شغال)
+# المفتاح مالتك المباشر
 api_key = "AIzaSyCCJtpyUJ79Xa9xsb9pIWLlQDFkssUc_Zc"
-
-# الإعداد القوي (أجبرناه يستخدم النسخة المستقرة v1)
-genai.configure(api_key=api_key)
-
-# هنا استخدمنا gemini-1.0-pro (هذا الموديل مستحيل يطلع 404)
-model = genai.GenerativeModel('gemini-1.0-pro')
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -26,16 +20,35 @@ if prompt := st.chat_input("اسأل عباس حيدر.."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
+
+    # الحل القاتل: استعملنا رابط v1 المستقر مباشرة (بدون كلمة models)
+    # وجبرناه يروح للموديل gemini-pro اللي هو أضمن شي
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={api_key}"
     
-    # الشخصية
-    context = "أنت عباس حيدر، صاحب محل لابتوبات ببغداد، أسعارك من 100 ألف للمليون، التوصيل مجاني لبغداد، رد بلهجة بغدادية."
+    headers = {'Content-Type': 'application/json'}
     
+    payload = {
+        "contents": [{
+            "parts": [{
+                "text": f"أنت عباس حيدر، صاحب محل لابتوبات ببغداد، أسعارك من 100 ألف للمليون، التوصيل مجاني، رد بلهجة بغدادية. الزبون يقول: {prompt}"
+            }]
+        }]
+    }
+
     try:
-        # إرسال السؤال
-        response = model.generate_content(f"{context}\nالزبون: {prompt}")
-        if response.text:
+        # إرسال الطلب
+        response = requests.post(url, headers=headers, json=payload)
+        response_json = response.json()
+        
+        # استخراج الرد غصباً على السيرفر
+        if 'candidates' in response_json:
+            answer = response_json['candidates'][0]['content']['parts'][0]['text']
             with st.chat_message("assistant"):
-                st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
+                st.markdown(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})
+        else:
+            st.error(f"اكو مشكلة بالرد: {response_json.get('error', {}).get('message', 'خطأ غير معروف')}")
+            
     except Exception as e:
-        st.error(f"عذراً عيوني، اكو مشكلة بالسيرفر: {str(e)}")
+        st.error(f"عذراً عيوني، اكو مشكلة: {str(e)}")
+    
