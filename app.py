@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="سولف وي عباس حيدر", page_icon="💻", layout="centered")
+st.set_page_config(page_title="اسئل عباس", page_icon="💻", layout="centered")
 
 design = """
     <style>
