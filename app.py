@@ -4,7 +4,7 @@ import json
 import re
 
 # 1. إعدادات المتجر
-STORE_NAME = "متجر النور للتقنية" 
+STORE_NAME = "عباس حيدر" 
 EXPERT_NAME = "عباس"              
 PRODUCT_TYPE = "أجهزة الموبايل والحاسبات" 
 GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzboWW6szwgFDiHOc9-nETt--8F33WZHimWRvJmT-ZHE-Y7TTjUFx4dC_OeIAwp7gcVVQ/exec"
