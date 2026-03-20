@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
-
+# هذا الرابط السري اللي جبته من قوقل
+WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxhN9Qr7EoXD56bDRH1PnDQEdhm4K6d6of1bUg1VWVR5BPDWQihiM-ntOvlG4c12udJXg/exec"
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="عباس حيدر للتقنية", page_icon="🎮", layout="centered")
 
