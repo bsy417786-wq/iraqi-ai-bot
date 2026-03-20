@@ -4,21 +4,26 @@ import json
 import re
 
 # 1. إعدادات المتجر
-STORE_NAME = "عباس حيدر" 
+STORE_NAME = "متجر النور للتقنية" 
 EXPERT_NAME = "عباس"              
 PRODUCT_TYPE = "أجهزة الموبايل والحاسبات" 
 GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzboWW6szwgFDiHOc9-nETt--8F33WZHimWRvJmT-ZHE-Y7TTjUFx4dC_OeIAwp7gcVVQ/exec"
 
 st.set_page_config(page_title="نظام " + STORE_NAME, page_icon="🎮", layout="centered")
 
-# --- تصميم الواتساب ---
+# --- تنظيف شامل للواجهة ومنطقة الإدخال ---
 design = """
     <style>
-    #MainMenu, footer, header, .stDeployButton, [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] { 
+    /* إخفاء كل القوائم والأزرار العائمة اللي تضايق المستخدم */
+    #MainMenu, footer, header, .stDeployButton, [data-testid="stToolbar"], 
+    [data-testid="stDecoration"], [data-testid="stStatusWidget"],
+    button[title="View source"], .st-emotion-cache-zq59as { 
         visibility: hidden; display: none !important; 
     }
+    
     .stApp { background: #0b141a; color: #e9edef; font-family: 'Segoe UI', sans-serif; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* تنسيق المحادثة */
     .chat-row { display: flex; margin: 15px 0; width: 100%; animation: fadeIn 0.4s ease-out; }
     .user-row { justify-content: flex-start; } 
     .abbas-row { justify-content: flex-end; } 
@@ -28,12 +33,17 @@ design = """
     }
     .user-bubble { background-color: #005c4b; color: white; border-bottom-left-radius: 2px; }
     .abbas-bubble { background-color: #202c33; color: white; border-bottom-right-radius: 2px; border: 1px solid #38bdf8; }
+    
+    /* تحسين صندوق الكتابة ليكون واضح وسهل الضغط */
     div[data-testid="stChatInput"] {
-        position: fixed !important; bottom: 5px !important; 
-        left: 15% !important; right: 15% !important;
-        width: 70% !important; z-index: 1002 !important;
-        background: #202c33 !important; border: 2px solid #38bdf8 !important; border-radius: 12px !important;
+        position: fixed !important; bottom: 20px !important; 
+        left: 10% !important; right: 10% !important;
+        width: 80% !important; z-index: 1000 !important;
+        background: #202c33 !important; border: 1px solid #38bdf8 !important; border-radius: 15px !important;
     }
+    /* إخفاء أي علامات دائرية تظهر بجانب النص */
+    div[data-testid="stChatInput"] button { background-color: #38bdf8 !important; color: black !important; border-radius: 50%; }
+    
     .stChatContainer { padding-bottom: 150px !important; }
     </style>
 """
@@ -69,19 +79,21 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": "Bearer " + MY_KEY, "Content-Type": "application/json"}
     
-    # تعليمات صارمة لاستخراج "الطلب فقط"
-    sys_instruction = "You are " + EXPERT_NAME + " for " + STORE_NAME + ". Speak Iraqi. If customer gives name/phone, say: [تم تسجيل طلبك يا بطل]."
-    extract_task = "Analyze the user message and extract only the item name or service requested. Return JSON: {'name': '...', 'phone': '...', 'order': 'JUST THE ITEM NAME'}. Context: " + prompt
+    sys_instruction = (
+        "أنت مساعد مبيعات ذكي بلهجة بغدادية اسمك " + EXPERT_NAME + " لمتجر " + STORE_NAME + ". "
+        "لا تثبت أي حجز ولا تقل [تم تسجيل طلبك] إلا بعد استلام (الاسم ورقم الهاتف). "
+        "إذا نقصت معلومة، اطلبها بذوق عراقي."
+    )
+    
+    extract_task = "Return JSON ONLY (name, phone, order) from this text: " + prompt
 
     try:
-        # 1. استخراج البيانات (الزبدة)
         extract_payload = {
             "model": "llama-3.1-8b-instant",
-            "messages": [{"role": "system", "content": "Extract data accurately"}, {"role": "user", "content": extract_task}]
+            "messages": [{"role": "system", "content": "Extract data"}, {"role": "user", "content": extract_task}]
         }
         extract_res = requests.post(url, headers=headers, json=extract_payload, timeout=7)
         
-        # 2. الرد الطبيعي
         chat_payload = {
             "model": "llama-3.3-70b-versatile",
             "messages": [{"role": "system", "content": sys_instruction}] + st.session_state.messages,
@@ -92,20 +104,13 @@ if prompt := st.chat_input("سولف ويا عباس..."):
         if response.status_code == 200:
             ans = response.json()['choices'][0]['message']['content']
             
-            # 3. الفلترة والإرسال للإكسل (الطلب الصافي)
-            if re.search(r'07\d{8,9}', prompt):
+            if (re.search(r'07\d{8,9}', prompt) or re.search(r'07\d{8,9}', ans)) and "[تم تسجيل طلبك" in ans:
                 try:
-                    raw_content = extract_res.json()['choices'][0]['message']['content']
-                    # تنظيف النص لضمان أنه JSON فقط
-                    clean_json = json.loads(re.search(r'\{.*\}', raw_content, re.DOTALL).group())
-                    
-                    final_name = clean_json.get('name', 'زبون جديد')
-                    final_phone = clean_json.get('phone', 'بدون رقم')
-                    final_order = clean_json.get('order', 'طلب عام')
-                    
-                    send_to_excel(final_name, final_phone, final_order)
+                    raw_json = extract_res.json()['choices'][0]['message']['content']
+                    clean_json = json.loads(re.search(r'\{.*\}', raw_json, re.DOTALL).group())
+                    send_to_excel(clean_json.get('name', 'زبون جديد'), clean_json.get('phone', 'بدون رقم'), clean_json.get('order', prompt))
                 except:
-                    send_to_excel("زبون جديد", "07xxxxxxx", "طلب غير محدد")
+                    send_to_excel("زبون جديد", "موجود في الدردشة", prompt)
             
             st.session_state.messages.append({"role": "assistant", "content": ans})
             st.markdown('<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 ' + EXPERT_NAME + ':</b><br>' + ans + '</div></div>', unsafe_allow_html=True)
