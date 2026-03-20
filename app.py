@@ -11,7 +11,7 @@ GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzboWW6szwgFDiHOc9-n
 
 st.set_page_config(page_title=f"نظام {STORE_NAME}", page_icon="🎮", layout="centered")
 
-# --- رجعنا تصميم الواتساب اللي تحبه ---
+# --- تصميم الواتساب ---
 design = """
     <style>
     #MainMenu, footer, header, .stDeployButton, [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] { 
@@ -39,7 +39,6 @@ design = """
 """
 st.markdown(design, unsafe_allow_html=True)
 
-# دالة الإرسال للإكسل
 def send_to_excel(name, phone, order):
     payload = {"name": name, "phone": phone, "order": order}
     try:
@@ -50,12 +49,12 @@ def send_to_excel(name, phone, order):
 # 2. الهوية
 st.markdown(f"<h2 style='text-align:center; color:#38bdf8;'>🎮 {STORE_NAME}</h2>", unsafe_allow_html=True)
 
-# 3. الذاكرة والـ API
+# 3. الذاكرة
 MY_KEY = "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"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. عرض المحادثة (بنفس المؤثرات القديمة)
+# 4. عرض المحادثة
 for msg in st.session_state.messages:
     side = "user-row" if msg["role"] == "user" else "abbas-row"
     bubble = "user-bubble" if msg["role"] == "user" else "abbas-bubble"
@@ -70,5 +69,12 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
-    # سياق عباس التجاري
-    context = f"أ
+    # تحسين كتابة النصوص لتجنب أخطاء اللغة العربية
+    context = "أنت مساعد مبيعات ذكي بلهجة بغدادية، اسمك " + EXPERT_NAME + " لمتجر " + STORE_NAME + ". اطلب الاسم والرقم لتسجيل الطلب."
+    extract_prompt = "Extract name, phone, and order as JSON from this text: " + prompt
+
+    try:
+        # 1. تحليل البيانات
+        extract_res = requests.post(url, headers=headers, json={
+            "model": "llama-3.1-8b-instant",
+            "messages": [{"role": "system", "content": "You are a
