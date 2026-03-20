@@ -18,9 +18,6 @@ design = """
         color: #38bdf8; font-size: 40px; font-weight: 800;
         text-align: center; margin-top: -30px; letter-spacing: 1px;
     }
-
-    /* تنسيق منطقة الدردشة حتى ما تندفن تحت الصور الثابتة */
-    .stChatFloatingInputContainer { background-color: rgba(15, 23, 42, 1) !important; }
     
     [data-testid="stChatMessage"] {
         background: #1e293b !important;
@@ -29,39 +26,37 @@ design = """
         margin-bottom: 10px !important;
     }
 
-    /* تثبيت الصور والفوتر بالأسفل (Fixed Footer) */
+    /* تثبيت الصور والفوتر بالأسفل */
     .fixed-footer {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        background: linear-gradient(0deg, #0f172a 80%, transparent 100%);
+        background: #0f172a;
         padding: 10px 0;
         z-index: 999;
-        border-top: 1px solid #1e293b;
+        border-top: 2px solid #1e293b;
     }
 
     .footer-content {
         display: flex;
         justify-content: center;
-        gap: 20px;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 20px;
+        gap: 15px;
+        padding: 0 10px;
     }
 
     .footer-img {
-        width: 150px;
-        height: 80px;
+        width: 120px;
+        height: 70px;
         object-fit: cover;
         border-radius: 8px;
         border: 1px solid #38bdf8;
     }
 
-    /* إضافة مسافة بالأسفل للمحادثة حتى لا تتغطى بالصور */
-    .stChatContainer { padding-bottom: 180px !important; }
+    /* مسافة أمان للمحادثة حتى لا تختفي وراء الفوتر */
+    .stChatContainer { padding-bottom: 200px !important; }
     
-    /* أنيميشن النقاط */
+    /* أنيميشن النقاط (Typing) */
     .typing { display: flex; align-items: center; gap: 5px; padding: 5px; }
     .dot { width: 6px; height: 6px; background: #38bdf8; border-radius: 50%; animation: blink 1.4s infinite both; }
     .dot:nth-child(2) { animation-delay: 0.2s; }
@@ -107,8 +102,9 @@ if prompt := st.chat_input("اسأل عباس عن تجميعات الكيمنك
         headers = { "Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json" }
         
         context = (
-            "أنت عباس حيدر، صاحب محل كمبيوترات كيمنك ببغداد. لهجتك عراقية بغدادية محترمة. "
-            "اختصاصك فقط الكمبيوتر. أغري الزبون بالعروض والقطع القوية وانصحه كأخ."
+            "أنت عباس حيدر، خبير كمبيوترات وكيمنك في بغداد. لهجتك عراقية بغدادية محترمة. "
+            "اختصاصك فقط الكمبيوتر. إذا سألك عن غير شي اعتذر بذكاء وگول اختصاصي بس لابتوبات. "
+            "أغري الزبون بعروض الكيمنك والقطع القوية وانصحه كأخ."
         )
         
         payload = {
@@ -124,13 +120,22 @@ if prompt := st.chat_input("اسأل عباس عن تجميعات الكيمنك
             typing_placeholder.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
         except:
-            typing_placeholder.error("اصبرلي ثانية عيوني، السيرفر حمل..")
+            typing_placeholder.error("السيرفر مشغول شوية عيوني..")
 
-# 6. الجزء السفلي الثابت (Fixed Footer)
-st.markdown(f"""
+# 6. الفوتر الثابت بالأسفل (الصور)
+footer_html = f"""
     <div class="fixed-footer">
-        <div style="text-align:center; color:#facc15; font-size:14px; font-weight:bold; margin-bottom:5px;">
-            💎 عروض الكيمنك والاحتراف بانتظارك 💎
+        <div style="text-align:center; color:#facc15; font-size:13px; font-weight:bold; margin-bottom:5px;">
+            🎮 عروض الكيمنك والاحتراف بانتظارك 🎮
         </div>
         <div class="footer-content">
-            <img src="
+            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200" class="footer-img">
+            <img src="https://images.unsplash.com/photo-1603481546238-487240415921?q=80&w=200" class="footer-img">
+            <img src="https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?q=80&w=200" class="footer-img">
+        </div>
+        <div style="text-align:center; color:#94a3b8; font-size:10px; margin-top:5px;">
+            📍 بغداد - الصناعة | 📞 07700000000 | © 2026 ABBAS HAIDER
+        </div>
+    </div>
+"""
+st.markdown(footer_html
