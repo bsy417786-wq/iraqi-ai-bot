@@ -59,20 +59,41 @@ for msg in st.session_state.messages:
     side = "user-row" if msg["role"] == "user" else "abbas-row"
     bubble = "user-bubble" if msg["role"] == "user" else "abbas-bubble"
     label = "👤 الزبون" if msg["role"] == "user" else "🎮 " + EXPERT_NAME
-    st.markdown(f'<div class="chat-row {side}"><div class="bubble {bubble}"><b>{label}:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="chat-row ' + side + '"><div class="bubble ' + bubble + '"><b>' + label + ':</b><br>' + msg["content"] + '</div></div>', unsafe_allow_html=True)
 
 # 5. منطق الإدخال والرد
 if prompt := st.chat_input("سولف ويا عباس..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 الزبون:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 الزبون:</b><br>' + prompt + '</div></div>', unsafe_allow_html=True)
     
     url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
+    headers = {"Authorization": "Bearer " + MY_KEY, "Content-Type": "application/json"}
     
-    # تحويل النصوص لمتغيرات نظيفة تماماً
-    sys_instruction = "You are a sales assistant named " + EXPERT_NAME + " for a shop called " + STORE_NAME + ". Speak in Iraqi Arabic dialect mixed with formal Arabic. Ask for customer name and phone. If you get a phone number, say: [تم تسجيل طلبك يا بطل]."
-    extract_task = "Return JSON only with name, phone, order from this text: " + prompt
+    # تحضير التعليمات
+    sys_instruction = "You are a sales assistant named " + EXPERT_NAME + " for " + STORE_NAME + ". Speak Iraqi dialect. If customer gives name/phone, say: [تم تسجيل طلبك يا بطل]."
+    extract_task = "Return JSON ONLY (name, phone, order) from: " + prompt
 
     try:
         # 1. تحليل البيانات
-        extract_res = requests.post(url, headers=headers, json={
+        extract_payload = {
+            "model": "llama-3.1-8b-instant",
+            "messages": [{"role": "system", "content": "Extract data"}, {"role": "user", "content": extract_task}]
+        }
+        extract_res = requests.post(url, headers=headers, json=extract_payload, timeout=7)
+        
+        # 2. الرد الطبيعي
+        chat_payload = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [{"role": "system", "content": sys_instruction}] + st.session_state.messages,
+            "temperature": 0.7
+        }
+        response = requests.post(url, headers=headers, json=chat_payload, timeout=12)
+        
+        if response.status_code == 200:
+            ans = response.json()['choices'][0]['message']['content']
+            
+            # 3. الإرسال للإكسل عند وجود رقم
+            if re.search(r'07\d{8,9}', prompt):
+                try:
+                    raw_json = extract_res.json()['choices'][0]['message']['content']
+                    clean_json = json.loads(raw_json
