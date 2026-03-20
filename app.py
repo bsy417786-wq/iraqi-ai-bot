@@ -6,7 +6,7 @@ st.set_page_config(page_title="اسأل عباس حيدر", page_icon="🎮", la
 
 design = """
     <style>
-    /* إخفاء كل زوائد ستريمليت والـ Manage app */
+    /* إخفاء زوائد ستريمليت والـ Manage app */
     #MainMenu, footer, header, .stDeployButton, div[data-testid="stToolbar"], div[data-testid="stDecoration"], [data-testid="stStatusWidget"], iframe[title="manage-app"] { 
         visibility: hidden; display: none !important; 
     }
@@ -94,48 +94,4 @@ if prompt := st.chat_input("اسأل عباس عن تجميعات الكيمنك
         st.markdown(f"<strong style='color:#facc15;'>أنت:</strong><br>{prompt}", unsafe_allow_html=True)
     
     with st.chat_message("assistant", avatar=ABBAS_AVATAR):
-        st.markdown(f"<strong style='color:#38bdf8;'>عباس حيدر:</strong>", unsafe_allow_html=True)
-        typing_placeholder = st.empty()
-        typing_placeholder.markdown('<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', unsafe_allow_html=True)
-
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = { "Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json" }
-        
-        context = (
-            "أنت عباس حيدر، خبير كمبيوترات وكيمنك في بغداد. لهجتك عراقية بغدادية محترمة. "
-            "اختصاصك فقط الكمبيوتر. إذا سألك عن غير شي اعتذر بذكاء وگول اختصاصي بس لابتوبات. "
-            "أغري الزبون بعروض الكيمنك والقطع القوية وانصحه كأخ."
-        )
-        
-        payload = {
-            "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "system", "content": context}] + st.session_state.messages,
-            "temperature": 0.6
-        }
-
-        try:
-            response = requests.post(url, headers=headers, json=payload)
-            result = response.json()
-            answer = result['choices'][0]['message']['content']
-            typing_placeholder.markdown(answer)
-            st.session_state.messages.append({"role": "assistant", "content": answer})
-        except:
-            typing_placeholder.error("السيرفر مشغول شوية عيوني..")
-
-# 6. الفوتر الثابت بالأسفل (الصور)
-footer_html = f"""
-    <div class="fixed-footer">
-        <div style="text-align:center; color:#facc15; font-size:13px; font-weight:bold; margin-bottom:5px;">
-            🎮 عروض الكيمنك والاحتراف بانتظارك 🎮
-        </div>
-        <div class="footer-content">
-            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200" class="footer-img">
-            <img src="https://images.unsplash.com/photo-1603481546238-487240415921?q=80&w=200" class="footer-img">
-            <img src="https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?q=80&w=200" class="footer-img">
-        </div>
-        <div style="text-align:center; color:#94a3b8; font-size:10px; margin-top:5px;">
-            📍 بغداد - الصناعة | 📞 07700000000 | © 2026 ABBAS HAIDER
-        </div>
-    </div>
-"""
-st.markdown(footer_html
+        st
