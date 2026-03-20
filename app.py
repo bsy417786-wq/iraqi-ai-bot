@@ -6,7 +6,7 @@ import re
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="عباس حيدر للتقنية", page_icon="🎮", layout="centered")
 
-# --- رابط قوقل شيت الجديد مالتك ---
+# --- رابط قوقل شيت الخاص بك ---
 GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzboWW6szwgFDiHOc9-nETt--8F33WZHimWRvJmT-ZHE-Y7TTjUFx4dC_OeIAwp7gcVVQ/exec"
 
 design = """
@@ -40,11 +40,7 @@ st.markdown(design, unsafe_allow_html=True)
 
 # دالة إرسال البيانات المرتبة للإكسل
 def send_to_excel(name, phone, order):
-    payload = {
-        "name": name,
-        "phone": phone,
-        "order": order
-    }
+    payload = {"name": name, "phone": phone, "order": order}
     try:
         requests.post(GOOGLE_SHEET_URL, data=json.dumps(payload), timeout=5)
     except:
@@ -76,39 +72,47 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 أنت:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
     
-    # استخراج رقم الهاتف والاسم بشكل ذكي
-    phone_match = re.search(r'(07\d{8,9})', prompt)
-    extracted_phone = phone_match.group(1) if phone_match else "غير متوفر"
-    
-    url = "https://api.api.groq.com/openai/v1/chat/completions" # تصحيح الرابط
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
-    context = (
-        "أنت 'عباس حيدر'، خبير تقني وصاحب متجر في بغداد. "
-        "أسلوبك: مزيج بين اللغة العربية الفصحى الرصينة واللهجة البغدادية المحببة. "
-        "مثال: 'أهلاً بك يا صديقي، نعم متوفر لدينا.. تدلل عيوني'. "
-        "مهمتك تسجيل الطلبات. عندما يعطيك الزبون اسمه أو رقمه، قل له: [تم تسجيل طلبك يا بطل]. "
-        "كن دائماً لبقاً ومرحباً."
+    # --- ذكاء اصطناعي إضافي لاستخراج البيانات الصافية ---
+    extraction_prompt = (
+        "حلل النص التالي واستخرج منه (الاسم، رقم الهاتف، والطلب) فقط. "
+        "اجعل الرد بصيغة JSON حصراً كالتالي: "
+        '{"name": "الاسم هنا", "phone": "الرقم هنا", "order": "الطلب الصافي هنا"}. '
+        "إذا لم تجد الاسم اكتب 'زبون جديد'. إذا لم تجد الطلب اكتب 'استفسار'. "
+        f"النص: {prompt}"
     )
-    
-    payload = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": [{"role": "system", "content": context}] + st.session_state.messages,
-        "temperature": 0.7
-    }
 
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        if response.status_code == 200:
-            ans = response.json()['choices'][0]['message']['content']
-            
-            # إذا اكو رقم تلفون، ندزه للإكسل فوراً
-            if extracted_phone != "غير متوفر":
-                send_to_excel("زبون مهتم", extracted_phone, prompt)
-        else:
-            ans = "اعتذر منك يا صديقي، المحل مزدحم حالياً. دقايق ونرد عليك!"
-            
+        # 1. عملية استخراج البيانات (بالخلفية)
+        extract_res = requests.post(url, headers=headers, json={
+            "model": "llama-3.1-8b-instant",
+            "messages": [{"role": "system", "content": "You are a data extractor."}, {"role": "user", "content": extraction_prompt}]
+        }, timeout=5)
+        
+        data_json = json.loads(extract_res.json()['choices'][0]['message']['content'])
+        
+        # 2. عملية الرد الطبيعي على الزبون
+        context = (
+            "أنت عباس حيدر، صاحب محل تقنيات في بغداد. "
+            "تتحدث لغة عربية فصحى رصينة مع لمسات بغدادية (عيوني، تدلل، يابة). "
+            "عند تسجيل الطلب قل: [تم تسجيل طلبك يا بطل]."
+        )
+        
+        response = requests.post(url, headers=headers, json={
+            "model": "llama-3.3-70b-versatile",
+            "messages": [{"role": "system", "content": context}] + st.session_state.messages,
+            "temperature": 0.7
+        }, timeout=10)
+        
+        ans = response.json()['choices'][0]['message']['content']
+
+        # 3. إذا وجدنا رقم هاتف، نرسل البيانات المفصلة للإكسل
+        # نستخدم regex للتأكد من وجود رقم هاتف فعلي قبل الإرسال
+        if re.search(r'07\d{8,9}', prompt):
+            send_to_excel(data_json['name'], data_json['phone'], data_json['order'])
+
         st.session_state.messages.append({"role": "assistant", "content": ans})
         st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 عباس حيدر:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
