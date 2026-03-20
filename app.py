@@ -28,34 +28,32 @@ design = """
     .user-bubble { background-color: #005c4b; color: white; border-bottom-left-radius: 2px; }
     .abbas-bubble { background-color: #202c33; color: white; border-bottom-right-radius: 2px; border: 1px solid #38bdf8; }
 
-    /* 1. صندوق الكتابة - أقصى الأسفل تماماً */
+    /* صندوق الكتابة - أقصى الأسفل تماماً */
     div[data-testid="stChatInput"] {
         position: fixed !important;
-        bottom: 10px !important; 
-        left: 5% !important;
-        right: 5% !important;
-        width: 90% !important;
+        bottom: 5px !important; 
+        left: 15% !important; /* ترك مسافة للمعلومات الجانبية */
+        right: 15% !important;
+        width: 70% !important;
         z-index: 1002 !important;
         background: #202c33 !important;
         border: 2px solid #38bdf8 !important;
         border-radius: 12px !important;
     }
 
-    /* 2. الفوتر والصور - صعدناهم فوق صندوق الكتابة */
-    .fixed-footer {
-        position: fixed;
-        bottom: 85px; left: 0; width: 100%;
-        background: #0b141a; padding: 10px 0;
-        z-index: 1001; border-top: 1px solid #38bdf8;
-        text-align: center;
+    /* معلومات الجوانب (يمين ويسار الصندوق) */
+    .side-info-left {
+        position: fixed; bottom: 15px; left: 10px;
+        width: 13%; text-align: left; color: #facc15; font-size: 11px; font-weight: bold; z-index: 1003;
+    }
+    .side-info-right {
+        position: fixed; bottom: 15px; right: 10px;
+        width: 13%; text-align: right; color: #38bdf8; font-size: 11px; font-weight: bold; z-index: 1003;
     }
 
-    .footer-imgs { display: flex; justify-content: center; gap: 10px; margin-bottom: 5px; }
-    .footer-imgs img { width: 85px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #38bdf8; }
-
-    /* 3. حاوية المحادثة - تنهي قبل الفوتر بمسافة أمان */
+    /* حاوية المحادثة - مسافة أمان معقولة */
     .stChatContainer { 
-        padding-bottom: 280px !important; 
+        padding-bottom: 150px !important; 
     }
     </style>
 """
@@ -76,8 +74,18 @@ for msg in st.session_state.messages:
     label = "👤 أنت" if msg["role"] == "user" else "🎮 عباس حيدر"
     st.markdown(f'<div class="chat-row {side}"><div class="bubble {bubble}"><b>{label}:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
-# 5. منطق الإدخال والرد
-if prompt := st.chat_input("تفضل بسؤالك يا وحش..."):
+# 5. المعلومات الجانبية (بدل الفوتر الكبير)
+st.markdown("""
+    <div class="side-info-left">
+        📍 شارع الصناعة<br>🚚 توصيل 24/7
+    </div>
+    <div class="side-info-right">
+        📞 07700000000<br>💎 عروض نارية
+    </div>
+""", unsafe_allow_html=True)
+
+# 6. منطق الإدخال والرد
+if prompt := st.chat_input("سولف ويا عباس..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 أنت:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
     
@@ -85,9 +93,9 @@ if prompt := st.chat_input("تفضل بسؤالك يا وحش..."):
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
     context = (
-        "أنت عباس حيدر، خبير تقني وصاحب متجر في بغداد - شارع الصناعة. "
-        "تتحدث بلغة عربية فصحى رزينة مع لمسات عراقية (عيوني، تدلل، يا بطل، لوز). "
-        "التوصيل متاح 24/7."
+        "أنت عباس حيدر، خبير تقني وصاحب متجر في بغداد. "
+        "تتحدث بلغة عربية فصحى رزينة مع لمسات عراقية. "
+        "ممنوع تكرار السيرفر مشغول، إذا حدث خطأ اعتذر بلباقة."
     )
     
     payload = {
@@ -101,23 +109,9 @@ if prompt := st.chat_input("تفضل بسؤالك يا وحش..."):
         if response.status_code == 200:
             ans = response.json()['choices'][0]['message']['content']
         else:
-            ans = "اعتذر منك عيوني، السيرفر عليه ضغط حالياً. تدلل، اترك رسالتك وسأرد عليك فوراً!"
+            ans = "اعتذر منك عيوني، المحل مزدحم حالياً. اترك رسالتك وسأجيبك فوراً!"
             
         st.session_state.messages.append({"role": "assistant", "content": ans})
         st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 عباس حيدر:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
-        st.error("السيرفر مشغول شوية عيوني، جرب مرة ثانية!")
-
-# 6. الفوتر الثابت (صعدناه فوق صندوق الكتابة)
-st.markdown("""
-    <div class="fixed-footer">
-        <div style="color:#facc15; font-size:13px; font-weight:bold; margin-bottom:5px;">
-            📍 بغداد - شارع الصناعة | 📞 07700000000 | 🚚 توصيل 24/7
-        </div>
-        <div class="footer-imgs">
-            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200">
-            <img src="https://images.unsplash.com/photo-1603481546238-487240415921?q=80&w=200">
-            <img src="https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?q=80&w=200">
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+        st.error("السيرفر مشغول شوية، حاول مرة ثانية!")
