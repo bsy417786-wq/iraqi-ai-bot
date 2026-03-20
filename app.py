@@ -107,7 +107,7 @@ if prompt := st.chat_input("سولف ويا عباس..."):
             if extracted_phone != "غير متوفر":
                 send_to_excel("زبون مهتم", extracted_phone, prompt)
         else:
-            ans = "اعتذر منك يا صديقي، المحل مزدحم حالياً. حاول مرة ثانية عيوني!"
+            ans = "اعتذر منك يا صديقي، المحل مزدحم حالياً. دقايق ونرد عليك!"
             
         st.session_state.messages.append({"role": "assistant", "content": ans})
         st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 عباس حيدر:</b><br>{ans}</div></div>', unsafe_allow_html=True)
