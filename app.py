@@ -8,7 +8,7 @@ st.title("💻 عباس حيدر للمبيعات (أحدث إصدار)")
 st.info("ملاحظة: إذا طلع لك خطأ Quota، انتظر دقيقة لأن جوجل محددة عدد الرسائل للنسخة المجانية.")
 
 # 2. المفتاح مالتك (الكنز)
-api_key = "AIzaSyCCJtpyUJ79Xa9xsb9pIWLlQDFkssUc_Zc"
+api_key = "AIzaSyAOYBa5hQvKPiJpsxAr4iCCPU6t7YG_CYg"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
