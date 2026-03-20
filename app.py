@@ -7,7 +7,7 @@ st.title("💻 مساعد المبيعات الذكي (عباس حيدر)")
 st.markdown("مرحباً بك في محلنا! أنا عباس حيدر، حاضر لأي استفسار عن اللابتوبات.")
 
 # وضع المفتاح مباشرة لضمان التشغيل السريع
-api_key = "AIzaSyDD0LpYzy-Jnzbf_vyGSvVAup6JS4Rr_I4"
+api_key = "AIzaSyCpceO6ad-PwvrF0Fn8FqYA-jxjc0e20tg"
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
