@@ -6,7 +6,7 @@ st.set_page_config(page_title="سولف وي عباس حيدر", page_icon="💻
 
 design = """
     <style>
-    /* إخفاء زوائد ستريمليت */
+    /* إخفاء زوائد ستريمليت واليوزر */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -15,7 +15,7 @@ design = """
     div[data-testid="stDecoration"] {display: none;}
     [data-testid="stStatusWidget"] {display: none;}
     
-    /* الخلفية: تدرج من الكحلي للأبيض */
+    /* الخلفية: كحلي للأبيض */
     .stApp {
         background: linear-gradient(180deg, #0f172a 0%, #1e293b 35%, #ffffff 100%);
         background-attachment: fixed;
@@ -29,7 +29,7 @@ design = """
         padding-top: 10px;
     }
 
-    /* تنسيق فقاعات الدردشة والخط الأسود */
+    /* تنسيق فقاعات الدردشة - خط أسود صريح */
     [data-testid="stChatMessage"] {
         background-color: rgba(255, 255, 255, 1.0) !important;
         border-radius: 15px !important;
@@ -37,17 +37,11 @@ design = """
         margin-bottom: 15px !important;
     }
     
-    /* فرض اللون الأسود الواضح */
+    /* اللون الأسود للنصوص */
     [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] div {
         color: #000000 !important;
         font-weight: 500 !important;
         font-size: 17px !important;
-    }
-
-    /* إخفاء أيقونات البروفايل التلقائية */
-    [data-testid="stChatMessage"] .st-emotion-cache-16idsys, 
-    [data-testid="stChatMessageAvatar"] {
-        display: none !important;
     }
 
     /* الفوتر بالأسفل */
@@ -73,16 +67,18 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 3. المفتاح والذاكرة
+# 3. الروابط الشخصية (الصور)
 MY_KEY = "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"
+ABBAS_AVATAR = "https://i.ibb.co/v66Zz7r/Abbas-Haider-Logo.png" # لوجو عباس
+USER_AVATAR = "👤" # أيقونة المستخدم (أو حط رابط صورة ثانية)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. منطق الدردشة (المعالجة أولاً)
+# 4. منطق الدردشة (الترتيب الطبيعي: رسالتك ثم الرد)
 if prompt := st.chat_input("تفضل، اسأل عباس حيدر.."):
-    # إضافة رسالة المستخدم في بداية القائمة
-    st.session_state.messages.insert(0, {"role": "user", "content": prompt})
+    # تضاف الرسالة في نهاية القائمة ليكون الترتيب من الأقدم للأحدث
+    st.session_state.messages.append({"role": "user", "content": prompt})
     
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = { "Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json" }
@@ -92,28 +88,5 @@ if prompt := st.chat_input("تفضل، اسأل عباس حيدر.."):
         "كن رسمياً ومختصراً ودقيقاً جداً في وصف الأجهزة."
     )
     
-    # إرسال الرسائل بالترتيب التاريخي للـ AI
     payload = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": [{"role": "system", "content": context}] + st.session_state.messages[::-1],
-        "temperature": 0.3
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        result = response.json()
-        answer = result['choices'][0]['message']['content']
-        # إضافة رد عباس في بداية القائمة
-        st.session_state.messages.insert(0, {"role": "assistant", "content": answer})
-    except:
-        st.error("عذراً، حدث خطأ في الاتصال.")
-
-# 5. عرض المحادثة (الرسائل من الأحدث للأقدم)
-for message in st.session_state.messages:
-    if message["role"] == "assistant":
-        # عرض الاسم "عباس حيدر" بصف الرسالة
-        with st.chat_message("assistant"):
-            st.markdown(f"**عباس حيدر:** {message['content']}")
-    else:
-        with st.chat_message("user"):
-            st.markdown(f"**أنت:** {message['content']}")
+        "model": "llama-3.3-70b-vers
