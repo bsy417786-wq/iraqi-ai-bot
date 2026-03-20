@@ -3,13 +3,13 @@ import requests
 import json
 import re
 
-# 1. إعدادات المتجر (تغيرها حسب الزبون اللي تبيعه عباس)
+# 1. إعدادات المتجر
 STORE_NAME = "متجر النور للتقنية" 
 EXPERT_NAME = "عباس"              
 PRODUCT_TYPE = "أجهزة الموبايل والحاسبات" 
 GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzboWW6szwgFDiHOc9-nETt--8F33WZHimWRvJmT-ZHE-Y7TTjUFx4dC_OeIAwp7gcVVQ/exec"
 
-st.set_page_config(page_title=f"نظام {STORE_NAME}", page_icon="🎮", layout="centered")
+st.set_page_config(page_title="نظام " + STORE_NAME, page_icon="🎮", layout="centered")
 
 # --- تصميم الواتساب ---
 design = """
@@ -47,7 +47,7 @@ def send_to_excel(name, phone, order):
         pass
 
 # 2. الهوية
-st.markdown(f"<h2 style='text-align:center; color:#38bdf8;'>🎮 {STORE_NAME}</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align:center; color:#38bdf8;'>🎮 " + STORE_NAME + "</h2>", unsafe_allow_html=True)
 
 # 3. الذاكرة
 MY_KEY = "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"
@@ -58,7 +58,7 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     side = "user-row" if msg["role"] == "user" else "abbas-row"
     bubble = "user-bubble" if msg["role"] == "user" else "abbas-bubble"
-    label = "👤 الزبون" if msg["role"] == "user" else f"🎮 {EXPERT_NAME}"
+    label = "👤 الزبون" if msg["role"] == "user" else "🎮 " + EXPERT_NAME
     st.markdown(f'<div class="chat-row {side}"><div class="bubble {bubble}"><b>{label}:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
 # 5. منطق الإدخال والرد
@@ -69,12 +69,10 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
-    # تحسين كتابة النصوص لتجنب أخطاء اللغة العربية
-    context = "أنت مساعد مبيعات ذكي بلهجة بغدادية، اسمك " + EXPERT_NAME + " لمتجر " + STORE_NAME + ". اطلب الاسم والرقم لتسجيل الطلب."
-    extract_prompt = "Extract name, phone, and order as JSON from this text: " + prompt
+    # تحويل النصوص لمتغيرات نظيفة تماماً
+    sys_instruction = "You are a sales assistant named " + EXPERT_NAME + " for a shop called " + STORE_NAME + ". Speak in Iraqi Arabic dialect mixed with formal Arabic. Ask for customer name and phone. If you get a phone number, say: [تم تسجيل طلبك يا بطل]."
+    extract_task = "Return JSON only with name, phone, order from this text: " + prompt
 
     try:
         # 1. تحليل البيانات
         extract_res = requests.post(url, headers=headers, json={
-            "model": "llama-3.1-8b-instant",
-            "messages": [{"role": "system", "content": "You are a
