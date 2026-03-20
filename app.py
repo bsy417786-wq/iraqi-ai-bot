@@ -6,8 +6,8 @@ import re
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="عباس حيدر للتقنية", page_icon="🎮", layout="centered")
 
-# --- رابط قوقل شيت الخاص بك ---
-GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxhN9Qr7EoXD56bDRH1PnDQEdhm4K6d6of1bUg1VWVR5BPDWQihiM-ntOvlG4c12udJXg/exec"
+# --- رابط قوقل شيت الجديد مالتك ---
+GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzboWW6szwgFDiHOc9-nETt--8F33WZHimWRvJmT-ZHE-Y7TTjUFx4dC_OeIAwp7gcVVQ/exec"
 
 design = """
     <style>
@@ -38,11 +38,15 @@ design = """
 """
 st.markdown(design, unsafe_allow_html=True)
 
-# دالة إرسال البيانات للإكسل
+# دالة إرسال البيانات المرتبة للإكسل
 def send_to_excel(name, phone, order):
-    payload = {"name": name, "phone": phone, "order": order}
+    payload = {
+        "name": name,
+        "phone": phone,
+        "order": order
+    }
     try:
-        requests.post(GOOGLE_SHEET_URL, data=json.dumps(payload))
+        requests.post(GOOGLE_SHEET_URL, data=json.dumps(payload), timeout=5)
     except:
         pass
 
@@ -72,21 +76,26 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 أنت:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
     
+    # استخراج رقم الهاتف والاسم بشكل ذكي
+    phone_match = re.search(r'(07\d{8,9})', prompt)
+    extracted_phone = phone_match.group(1) if phone_match else "غير متوفر"
+    
+    url = "https://api.api.groq.com/openai/v1/chat/completions" # تصحيح الرابط
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
     context = (
-        "أنت عباس حيدر، صاحب محل تقنيات في بغداد. "
-        "مهمتك: مساعدة الزبائن وبيع القطع (شاشات، كيبوردات، تجميعات). "
-        "عندما يقرر الزبون الشراء، اطلب منه (اسمه، رقم تلفونه، وعنوانه). "
-        "مهم جداً: إذا أعطاك الزبون معلوماته، قل له حصراً: [تم تسجيل طلبك يا بطل] "
-        "تحدث بلهجة بغدادية محببة."
+        "أنت 'عباس حيدر'، خبير تقني وصاحب متجر في بغداد. "
+        "أسلوبك: مزيج بين اللغة العربية الفصحى الرصينة واللهجة البغدادية المحببة. "
+        "مثال: 'أهلاً بك يا صديقي، نعم متوفر لدينا.. تدلل عيوني'. "
+        "مهمتك تسجيل الطلبات. عندما يعطيك الزبون اسمه أو رقمه، قل له: [تم تسجيل طلبك يا بطل]. "
+        "كن دائماً لبقاً ومرحباً."
     )
     
     payload = {
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "system", "content": context}] + st.session_state.messages,
-        "temperature": 0.6
+        "temperature": 0.7
     }
 
     try:
@@ -94,14 +103,13 @@ if prompt := st.chat_input("سولف ويا عباس..."):
         if response.status_code == 200:
             ans = response.json()['choices'][0]['message']['content']
             
-            # فحص إذا كان الزبون أعطى معلوماته (نبحث عن رقم هاتف مثلاً)
-            if any(char.isdigit() for char in prompt) and len(prompt) > 8:
-                # إرسال البيانات تلقائياً للإكسل
-                send_to_excel("زبون من الدردشة", prompt, "طلب عبر المحادثة")
+            # إذا اكو رقم تلفون، ندزه للإكسل فوراً
+            if extracted_phone != "غير متوفر":
+                send_to_excel("زبون مهتم", extracted_phone, prompt)
         else:
-            ans = "اعتذر منك عيوني، المحل مزدحم حالياً. اترك رسالتك وسأجيبك فوراً!"
+            ans = "اعتذر منك يا صديقي، المحل مزدحم حالياً. حاول مرة ثانية عيوني!"
             
         st.session_state.messages.append({"role": "assistant", "content": ans})
         st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 عباس حيدر:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
-        st.error("السيرفر مشغول شوية، حاول مرة ثانية!")
+        st.error("السيرفر مشغول، حاول مرة ثانية!")
