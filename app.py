@@ -49,7 +49,7 @@ design = """
 st.markdown(design, unsafe_allow_html=True)
 
 # 2. المقدمة والفوتر
-st.markdown('<div class="header-text">سولف وي عباس حيدر</div>', unsafe_allow_html=True)
+st.markdown('<div class="header-text">اسئل عباس حيدر</div>', unsafe_allow_html=True)
 
 st.markdown("""
     <div class="footer-left">
@@ -57,7 +57,7 @@ st.markdown("""
         📞 07700000000
     </div>
     <div class="footer-right">
-        "لابتوبك يمنه.. والضمان بجيبك"
+        "لابتوبك يمنه. والضمان بجيبك"
     </div>
 """, unsafe_allow_html=True)
 
