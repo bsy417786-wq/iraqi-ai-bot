@@ -2,13 +2,23 @@ import streamlit as st
 import requests
 import json
 
-# 1. واجهة المحل (التصميم الجديد)
-st.set_page_config(page_title="عباس حيدر 2026", page_icon="🚀")
-st.title("💻 عباس حيدر للمبيعات (أحدث إصدار)")
-st.info("ملاحظة: إذا طلع لك خطأ Quota، انتظر دقيقة لأن جوجل محددة عدد الرسائل للنسخة المجانية.")
+# 1. إعداد واجهة الموقع (التصميم الاحترافي)
+st.set_page_config(page_title="عباس حيدر للابتوبات 💻", page_icon="💻", layout="centered")
 
-# 2. المفتاح مالتك (الكنز)
-api_key = "AIzaSyAOYBa5hQvKPiJpsxAr4iCCPU6t7YG_CYg"
+# 2. عرض اللوجو الجديد
+# ملاحظة: إذا الشركة عندها اللوجو كملف، تكدر تبدله برابط الملف. هسة استخدمت اللوجو اللي سويناه.
+try:
+    # هسة راح اعرض صورة تقريبية للوجو حتى يشتغل كدامي
+    st.image("https://example.com/ عباس_حيدر_لوجو.png", width=150) # تبديل هذا برابط اللوجو الحقيقي لاحقاً
+except:
+    # إذا محملت الصورة، اعرض اسم المحل بشكل حلو
+    st.title("💻 عباس حيدر")
+    st.markdown("## محلات اللابتوبات العصرية في بغداد")
+
+st.markdown("---")
+
+# 3. المفتاح مالتك (الكنز)
+api_key = "AIzaSyCCJtpyUJ79Xa9xsb9pIWLlQDFkssUc_Zc"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -17,13 +27,12 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("اسأل عباس حيدر.."):
+if prompt := st.chat_input("تفضل اسأل عباس حيدر عيوني.."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # 3. هنا اللعبة: استخدمنا رابط الـ v1beta لضمان الوصول لأحدث الموديلات (مثل 2.0 حالياً)
-    # ملاحظة: Gemini 2.5 بعده مموجود رسمياً، فاستخدمنا الـ 2.0-flash لأنه الأسرع عالمياً
+    # 4. الرابط المباشر لأحدث موديل 2.0 فلاش
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     
     headers = {'Content-Type': 'application/json'}
@@ -31,13 +40,14 @@ if prompt := st.chat_input("اسأل عباس حيدر.."):
     # تعريف شخصية عباس حيدر "المطورة"
     context = (
         "أنت عباس حيدر، خبير لابتوبات عراقي محترف. "
-        "أسعارك تنافسية وتوصيلك بغدادي سريع ومجاني. "
-        "رد بلهجة بغدادية راقية ومرحبة (عيوني، تدلل، صار، من رخصتك)."
+        "أسعارك من 100 ألف وتوصل للمليون دينار عراقي. "
+        "عندك تخفيضات لعيون الزبائن، والتوصيل لبغداد مجاني. "
+        "رد بلهجة بغدادية محبوبة (عيوني، تدلل، خادم ربك، صار)."
     )
     
     payload = {
         "contents": [{
-            "parts": [{"text": f"{context}\nالزبون: {prompt}"}]
+            "parts": [{"text": f"{context}\nالزبون يقول: {prompt}"}]
         }]
     }
 
@@ -52,9 +62,10 @@ if prompt := st.chat_input("اسأل عباس حيدر.."):
             st.session_state.messages.append({"role": "assistant", "content": answer})
         elif 'error' in result:
             # إذا بعدها الكوتا قافلة، راح يگول لك انتظر كم ثانية
-            st.warning(f"جوجل تگول: {result['error']['message']}")
+            st.warning("عذراً عيوني، عباس تعبان شوية. انتظر دقيقة وجرب.")
         else:
-            st.error("السيرفر دا يتغلى علينا، جرب مرة ثانية عيوني.")
+            st.error("السيرفر دا يتغلى علينا.")
             
     except Exception as e:
         st.error(f"مشكلة تقنية: {str(e)}")
+
