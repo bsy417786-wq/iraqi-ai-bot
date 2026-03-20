@@ -23,22 +23,26 @@ design = """
     .bubble {
         padding: 12px 18px; border-radius: 18px; max-width: 75%;
         font-size: 16px; line-height: 1.6; position: relative;
+        word-wrap: break-word;
     }
 
     .user-bubble { background-color: #005c4b; color: white; border-bottom-left-radius: 2px; }
     .abbas-bubble { background-color: #202c33; color: white; border-bottom-right-radius: 2px; border: 1px solid #38bdf8; }
 
-    /* صندوق الكتابة - ضبطناه حتى ما يغطي الردود */
+    /* صندوق الكتابة - ضبطناه بالنص وبالأسفل */
     div[data-testid="stChatInput"] {
         position: fixed !important;
-        bottom: 150px !important; /* رفعة أمان */
+        bottom: 140px !important; 
+        left: 10% !important;
+        right: 10% !important;
+        width: 80% !important;
         z-index: 1001 !important;
         background: #202c33 !important;
         border: 2px solid #38bdf8 !important;
         border-radius: 12px !important;
     }
 
-    /* الفوتر الثابت (العنوان والرقم والصور) */
+    /* الفوتر الثابت */
     .fixed-footer {
         position: fixed;
         bottom: 0; left: 0; width: 100%;
@@ -55,10 +59,10 @@ design = """
 """
 st.markdown(design, unsafe_allow_html=True)
 
-# 2. الهوية البغدادية
+# 2. الهوية
 st.markdown("<h2 style='text-align:center; color:#38bdf8;'>🎮 عباس حيدر - خبير الكيمنك</h2>", unsafe_allow_html=True)
 
-# 3. المفتاح والذاكرة
+# 3. الذاكرة
 MY_KEY = "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"
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -70,38 +74,36 @@ for msg in st.session_state.messages:
     else:
         st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 عباس حيدر:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
-# 5. منطق الإدخال
-if prompt := st.chat_input("اسأل عباس.. عروضنا نار وشرار!"):
+# 5. منطق الإدخال والرد
+if prompt := st.chat_input("سولف وي عباس.. عروضنا نار وشرار!"):
+    # إضافة رسالة المستخدم وعرضها فوراً
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.rerun()
-
-# توليد رد عباس (إذا كانت آخر رسالة من المستخدم)
-if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+    
+    # طلب الرد من السيرفر
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
-    # حصر اللهجة بالعراقي البغدادي فقط
     context = (
         "أنت عباس حيدر من بغداد، صاحب محل كمبيوترات بشارع الصناعة. "
-        "ممنوع تتحدث أي لهجة غير العراقية البغدادية. لا سوري، لا لبناني، لا فصحى خشبية. "
-        "استخدم كلمات مثل: (عيوني، لوز، تدلل، نار وشرار، يا وحش، لقطة، ما مطروقة، بشدة). "
-        "شجع الزبون يشتري أقوى التجميعات ودمك خفيف ومرح جداً. "
+        "تحدث بلهجة بغدادية أصلية فقط (عيوني، لوز، تدلل، نار وشرار، يا وحش). "
+        "ممنوع استخدام أي لهجة أخرى (لا سوري ولا لبناني). "
+        "شجع الزبون يشتري قطع قوية وقول له عرضنا لقطة وما يتفوت. "
         "عنوانك: بغداد - شارع الصناعة. رقمك: 07700000000."
     )
     
     payload = {
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "system", "content": context}] + st.session_state.messages,
-        "temperature": 0.8
+        "temperature": 0.7
     }
 
     try:
         response = requests.post(url, headers=headers, json=payload)
         ans = response.json()['choices'][0]['message']['content']
         st.session_state.messages.append({"role": "assistant", "content": ans})
-        st.rerun()
+        st.rerun() # تحديث الصفحة لعرض الرد الجديد
     except:
-        st.error("عيني السيرفر گيم.. انتظر ثواني!")
+        st.error("السيرفر عليه لود عيوني، انتظر ثانية وجرب.")
 
 # 6. الفوتر الثابت (العنوان والرقم)
 st.markdown("""
@@ -114,6 +116,6 @@ st.markdown("""
             <img src="https://images.unsplash.com/photo-1603481546238-487240415921?q=80&w=200">
             <img src="https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?q=80&w=200">
         </div>
-        <div style="color:#94a3b8; font-size:10px;">© 2026 ABBAS HAIDER - GAMING EXPERT</div>
+        <div style="color:#94a3b8; font-size:10px;">© 2026 ABBAS HAIDER - بغداد شارع الصناعة</div>
     </div>
 """, unsafe_allow_html=True)
