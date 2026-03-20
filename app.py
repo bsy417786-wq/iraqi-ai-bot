@@ -8,7 +8,7 @@ st.title("💻 عباس حيدر للمبيعات (النسخة الذكية 2.0
 st.markdown("مرحباً بك! أنا عباس حيدر، حاضر لأي استفسار عن اللابتوبات والتوصيل.")
 
 # 2. المفتاح مالتك المباشر
-api_key = "AIzaSyCCJtpyUJ79Xa9xsb9pIWLlQDFkssUc_Zc"
+api_key = "AIzaSyB99jUQomPgJHpAZz5bQXe4hSeJucmKQW0"
 
 # 3. نظام ذاكرة الدردشة
 if "messages" not in st.session_state:
