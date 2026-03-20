@@ -30,10 +30,10 @@ design = """
         border: 1px solid #334155 !important;
         border-radius: 15px !important;
         margin-bottom: 12px !important;
-        animation: fadeIn 0.5s ease-out forwards; /* تطبيق التأثير هنا */
+        animation: fadeIn 0.5s ease-out forwards;
     }
 
-    /* رفع صندوق الكتابة فوق الصور */
+    /* رفع صندوق الكتابة فوق الصور بمسافة أمان */
     div[data-testid="stChatInput"] {
         position: fixed !important;
         bottom: 180px !important;
@@ -74,6 +74,8 @@ design = """
     /* أنيميشن النقاط */
     .typing { display: flex; align-items: center; gap: 5px; padding: 5px; }
     .dot { width: 6px; height: 6px; background: #38bdf8; border-radius: 50%; animation: blink 1.4s infinite both; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
     </style>
 """
@@ -91,7 +93,7 @@ USER_AVATAR = "👤"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. عرض المحادثة (مع تأثير الظهور)
+# 4. عرض المحادثة
 for message in st.session_state.messages:
     is_assistant = message["role"] == "assistant"
     avatar = ABBAS_AVATAR if is_assistant else USER_AVATAR
@@ -102,4 +104,7 @@ for message in st.session_state.messages:
 
 # 5. منطق الإدخال والرد
 if prompt := st.chat_input("اكتب سؤالك هنا لـ عباس..."):
-    st.session_state.messages.append({"role": "user", "content": prompt
+    # تصحيح السطر اللي جان بيه الخطأ
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user", avatar=USER_AVATAR):
+        st.markdown
