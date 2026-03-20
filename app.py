@@ -49,7 +49,7 @@ def send_to_excel(name, phone, order):
 # 2. الهوية
 st.markdown("<h2 style='text-align:center; color:#38bdf8;'>🎮 " + STORE_NAME + "</h2>", unsafe_allow_html=True)
 
-# 3. الذاكرة
+# 3. الذاكرة والـ Key
 MY_KEY = "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"
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -69,19 +69,18 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": "Bearer " + MY_KEY, "Content-Type": "application/json"}
     
-    # تحضير التعليمات
     sys_instruction = "You are a sales assistant named " + EXPERT_NAME + " for " + STORE_NAME + ". Speak Iraqi dialect. If customer gives name/phone, say: [تم تسجيل طلبك يا بطل]."
-    extract_task = "Return JSON ONLY (name, phone, order) from: " + prompt
+    extract_task = "Return JSON ONLY (name, phone, order) from this text: " + prompt
 
     try:
-        # 1. تحليل البيانات
+        # 1. تحليل البيانات بالخلفية
         extract_payload = {
             "model": "llama-3.1-8b-instant",
             "messages": [{"role": "system", "content": "Extract data"}, {"role": "user", "content": extract_task}]
         }
         extract_res = requests.post(url, headers=headers, json=extract_payload, timeout=7)
         
-        # 2. الرد الطبيعي
+        # 2. الرد الطبيعي على الزبون
         chat_payload = {
             "model": "llama-3.3-70b-versatile",
             "messages": [{"role": "system", "content": sys_instruction}] + st.session_state.messages,
@@ -92,8 +91,18 @@ if prompt := st.chat_input("سولف ويا عباس..."):
         if response.status_code == 200:
             ans = response.json()['choices'][0]['message']['content']
             
-            # 3. الإرسال للإكسل عند وجود رقم
+            # 3. الفلترة والإرسال للإكسل
             if re.search(r'07\d{8,9}', prompt):
                 try:
                     raw_json = extract_res.json()['choices'][0]['message']['content']
-                    clean_json = json.loads(raw_json
+                    clean_json = json.loads(raw_json)
+                    send_to_excel(clean_json.get('name', 'زبون جديد'), clean_data_phone := clean_json.get('phone', '07xxxxxxx'), clean_json.get('order', prompt))
+                except:
+                    send_to_excel("زبون جديد", "رقم غير محدد", prompt)
+            
+            st.session_state.messages.append({"role": "assistant", "content": ans})
+            st.markdown('<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 ' + EXPERT_NAME + ':</b><br>' + ans + '</div></div>', unsafe_allow_html=True)
+        else:
+            st.error("السيرفر مشغول حالياً.")
+    except:
+        st.error("أكو مشكلة بالاتصال عيوني!")
