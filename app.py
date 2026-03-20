@@ -1,12 +1,12 @@
 import streamlit as st
 import requests
 
-# 1. إعدادات الصفحة والستايل الحديث (Modern Dark Tech)
+# 1. إعدادات الصفحة والستايل الجديد (Anti-Black Design)
 st.set_page_config(page_title="عباس حيدر | Tech Advisor", page_icon="💻", layout="centered")
 
 design = """
     <style>
-    /* إخفاء كل أدوات ستريمليت واليوزر والمنيو */
+    /* إخفاء كل أدوات ستريمليت واليوزر تماماً */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -15,79 +15,79 @@ design = """
     div[data-testid="stDecoration"] {display: none;}
     [data-testid="stStatusWidget"] {display: none;}
     
-    /* خلفية عصرية - رمادي غامق جداً مع تدرج ذهبي خفيف */
+    /* خلفية بيضاء لؤلؤية مع تدرج معدني - لا يوجد أسود نهائياً */
     .stApp {
-        background: radial-gradient(circle at top, #1e1e1e 0%, #0a0a0a 100%);
-        color: #e0e0e0;
-        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        color: #2c3e50;
     }
     
-    /* تصميم الهيدر (العنوان) */
+    /* تنسيق العنوان بالذهب الملكي */
     .main-title { 
-        background: linear-gradient(90deg, #d4af37, #f7e08b);
+        background: linear-gradient(90deg, #b8860b, #d4af37);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 45px; font-weight: 900; text-align: center; margin-bottom: 0px; 
-    }
-    .sub-info { color: #888; font-size: 14px; text-align: center; letter-spacing: 1px; }
-    .catch-phrase { color: #d4af37; font-size: 16px; text-align: center; margin-top: 5px; opacity: 0.9; }
-
-    /* تأثير الزجاج لفقاعات الدردشة (Glassmorphism) */
-    [data-testid="stChatMessage"] {
-        background: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(212, 175, 55, 0.1) !important;
-        border-radius: 15px !important;
-        backdrop-filter: blur(10px);
-        margin-bottom: 15px !important;
+        font-size: 48px; font-weight: 900; text-align: center; margin-bottom: 5px;
     }
     
-    /* تمييز رسالة المستخدم */
+    .sub-info { color: #7f8c8d; font-size: 14px; text-align: center; font-weight: 500; letter-spacing: 1px; }
+    .catch-phrase { color: #b8860b; font-size: 16px; text-align: center; margin-top: 8px; font-weight: 600; }
+
+    /* تصميم الفقاعات بستايل Glassmorphism فاتح */
+    [data-testid="stChatMessage"] {
+        background: rgba(255, 255, 255, 0.7) !important;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+        margin-bottom: 15px !important;
+        color: #2c3e50 !important;
+    }
+    
+    /* تمييز رسالة المستخدم بلون ذهبي ناعم */
     [data-testid="stChatMessageUser"] {
-        border-left: 4px solid #d4af37 !important;
+        background: rgba(212, 175, 55, 0.1) !important;
+        border-right: 5px solid #d4af37 !important;
     }
 
-    /* تنسيق صورة البروفايل داخل الدردشة */
-    [data-testid="stChatMessageAssistant"] img {
-        border: 2px solid #d4af37;
-        border-radius: 50% !important;
+    /* تنسيق صندوق الإدخال ليكون أبيض وأنيق */
+    .stChatInputContainer {
+        background-color: transparent !important;
+        padding-bottom: 40px;
     }
-
-    /* زر الإدخال */
-    .stChatInputContainer { padding-bottom: 30px; }
+    
+    input {
+        background-color: white !important;
+        color: #2c3e50 !important;
+        border: 1px solid #d4af37 !important;
+    }
     </style>
 """
 st.markdown(design, unsafe_allow_html=True)
 
-# 2. الهوية البصرية (اللوجو والمعلومات)
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    try:
-        st.image("Gemini_Generated_Image_xhf51axhf51axhf5.jpg", width=140)
-    except:
-        st.image("https://i.ibb.co/v66Zz7r/Abbas-Haider-Logo.png", width=140)
-
+# 2. الهوية البصرية (بدون صورة اللابتوبات اللي بالبداية)
 st.markdown('<div class="main-title">عباس حيدر</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-info">💻 TECH ADVISOR | BAGHDAD</div>', unsafe_allow_html=True)
-st.markdown('<div class="catch-phrase">"نصحبكم في اختيار الأفضل لمستقبلكم التقني"</div>', unsafe_allow_html=True)
-st.markdown("<hr style='border: 0.1px solid rgba(212,175,55,0.2); margin: 25px 0;'>", unsafe_allow_html=True)
+st.markdown('<div class="sub-info">📍 BAGHDAD | TECHNOLOGY CONSULTANT</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-info">📞 07700000000</div>', unsafe_allow_html=True)
+st.markdown('<div class="catch-phrase">"نحو رؤية تقنية متجددة"</div>', unsafe_allow_html=True)
+st.markdown("<hr style='border: 0.1px solid rgba(212,175,55,0.3); margin: 30px 0;'>", unsafe_allow_html=True)
 
-# 3. المفتاح والرسائل
+# 3. المفتاح ورابط الأفاتار (استخدام رابط اللوجو كأفاتار)
 MY_KEY = "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"
+AVATAR_LINK = "https://i.ibb.co/v66Zz7r/Abbas-Haider-Logo.png"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# عرض المحادثة (البروفايل صار بجانب رسالة عباس تلقائياً)
+# عرض المحادثة
 for message in st.session_state.messages:
     if message["role"] == "assistant":
-        with st.chat_message("assistant", avatar="Gemini_Generated_Image_xhf51axhf51axhf5.jpg"):
+        with st.chat_message("assistant", avatar=AVATAR_LINK):
             st.markdown(message["content"])
     else:
         with st.chat_message("user"):
             st.markdown(message["content"])
 
-# 4. منطق الدردشة (الفصحى الرزنة)
-if prompt := st.chat_input("كيف يمكنني مساعدتك اليوم؟"):
+# 4. منطق الدردشة (فصحى رسمية جداً)
+if prompt := st.chat_input("بمَ يمكننا خدمتكم اليوم؟"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -96,9 +96,9 @@ if prompt := st.chat_input("كيف يمكنني مساعدتك اليوم؟"):
     headers = { "Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json" }
     
     context = (
-        "أنت عباس حيدر، مستشار تقني محترف في أجهزة اللابتوب. "
-        "تحدث بالفصحى فقط وبأسلوب رسمي راقٍ يليق بشركة تقنية حديثة. "
-        "كن مباشراً في تقديم المواصفات والأسعار، واجعل العميل يشعر بالثقة."
+        "أنت عباس حيدر، خبير استراتيجي في تقنيات الحاسوب. "
+        "تحدث باللغة العربية الفصحى الراقية. كن صريحاً، دقيقاً، واحترافياً لأقصى درجة. "
+        "قدم النصائح التقنية بناءً على أحدث معايير السوق العالمي."
     )
     
     payload = {
@@ -108,13 +108,13 @@ if prompt := st.chat_input("كيف يمكنني مساعدتك اليوم؟"):
     }
 
     try:
-        with st.spinner("جاري المراجعة..."):
+        with st.spinner("جاري التحليل الفني..."):
             response = requests.post(url, headers=headers, json=payload)
             result = response.json()
             answer = result['choices'][0]['message']['content']
             
-            with st.chat_message("assistant", avatar="Gemini_Generated_Image_xhf51axhf51axhf5.jpg"):
+            with st.chat_message("assistant", avatar=AVATAR_LINK):
                 st.markdown(answer)
             st.session_state.messages.append({"role": "assistant", "content": answer})
     except:
-        st.error("عذراً، يرجى إعادة المحاولة لاحقاً.")
+        st.error("عذراً، تعذر الاتصال بالنظام حالياً.")
