@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="عباس حيدر - للتعامل مع الزبائن", page_icon="💻")
+st.set_page_config(page_title="عباس حيدر - النسخة القوية", page_icon="💻")
 st.title("💻 مساعد المبيعات: عباس حيدر (Llama 3)")
 
 # المفتاح الجديد من Groq (حطه هنا)
@@ -27,7 +27,7 @@ if prompt := st.chat_input("تفضل اسأل عباس حيدر.."):
         "Content-Type": "application/json"
     }
     
-    context = "أنت عباس حيدر، صاحب محل لابتوبات ببغداد، أسعارك من 100 ألف للمليون، رد بلهجة بغدادية محبوبة (تدلل عيني، عيوني الك )
+    context = "أنت عباس حيدر، صاحب محل لابتوبات ببغداد، أسعارك من 100 ألف للمليون، رد بلهجة بغدادية محبوبة (تدلل عيني، عيوني الك)."
     
     payload = {
         "model": "llama3-8b-8192", # هذا الموديل طيارة
