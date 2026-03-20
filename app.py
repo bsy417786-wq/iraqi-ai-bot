@@ -13,12 +13,9 @@ design = """
 
     .stApp { background: #0b141a; color: #e9edef; font-family: 'Segoe UI', sans-serif; }
 
-    /* أنيميشن الظهور */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* حاوية المحادثة الأساسية */
-    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
-        padding-bottom: 280px !important; /* مسافة أمان عملاقة من الأسفل */
+    /* حاوية المحادثة - رفعناها 350 بكسل حتى ما تنحجب */
+    .stChatContainer { 
+        padding-bottom: 350px !important; 
     }
 
     .chat-row { display: flex; margin: 15px 0; width: 100%; animation: fadeIn 0.4s ease-out; }
@@ -26,17 +23,17 @@ design = """
     .abbas-row { justify-content: flex-end; } 
 
     .bubble {
-        padding: 12px 18px; border-radius: 18px; max-width: 75%;
+        padding: 12px 18px; border-radius: 18px; max-width: 78%;
         font-size: 16px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
     .user-bubble { background-color: #005c4b; color: white; border-bottom-left-radius: 2px; }
     .abbas-bubble { background-color: #202c33; color: white; border-bottom-right-radius: 2px; border: 1px solid #38bdf8; }
 
-    /* صندوق الكتابة - ثابت بالمنتصف ومرتفع عن الفوتر قليلاً */
+    /* صندوق الكتابة - ثابت فوق الفوتر */
     div[data-testid="stChatInput"] {
         position: fixed !important;
-        bottom: 125px !important; 
+        bottom: 130px !important; 
         left: 5% !important;
         right: 5% !important;
         width: 90% !important;
@@ -57,12 +54,6 @@ design = """
 
     .footer-imgs { display: flex; justify-content: center; gap: 10px; margin-bottom: 5px; }
     .footer-imgs img { width: 85px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #38bdf8; }
-
-    /* منع المحادثة من الهروب خلف الصندوق */
-    .stChatContainer { 
-        padding-bottom: 320px !important; 
-        overflow-y: auto;
-    }
     </style>
 """
 st.markdown(design, unsafe_allow_html=True)
@@ -70,12 +61,12 @@ st.markdown(design, unsafe_allow_html=True)
 # 2. الهوية
 st.markdown("<h2 style='text-align:center; color:#38bdf8;'>🎮 عباس حيدر للتقنية</h2>", unsafe_allow_html=True)
 
-# 3. الذاكرة
+# 3. الذاكرة والـ Key
 MY_KEY = "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"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 4. عرض المحادثة
+# 4. عرض المحادثة (يسار ويمين)
 for msg in st.session_state.messages:
     side = "user-row" if msg["role"] == "user" else "abbas-row"
     bubble = "user-bubble" if msg["role"] == "user" else "abbas-bubble"
@@ -83,36 +74,44 @@ for msg in st.session_state.messages:
     st.markdown(f'<div class="chat-row {side}"><div class="bubble {bubble}"><b>{label}:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
 # 5. منطق الإدخال والرد
-if prompt := st.chat_input("تفضل بسؤالك يا بطل..."):
+if prompt := st.chat_input("تفضل بسؤالك يا وحش..."):
+    # إضافة رسالة المستخدم وعرضها
     st.session_state.messages.append({"role": "user", "content": prompt})
+    st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 أنت:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
     
+    # طلب الرد من السيرفر
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
     context = (
-        "أنت عباس حيدر، صاحب متجر تقني في بغداد. لغتك فصحى محترمة مع كلمات عراقية (عيوني، تدلل، يا بطل). "
-        "مهمتك هي تقديم نصائح حول تجميعات الكمبيوتر. التوصيل متاح 24/7."
+        "أنت عباس حيدر، خبير تقني وصاحب متجر في بغداد - شارع الصناعة. "
+        "تتحدث بلغة عربية فصحى رزينة مع لمسات عراقية (عيوني، تدلل، يا بطل، لوز). "
+        "ممنوع استخدام لهجات أخرى. التوصيل متاح 24/7."
     )
     
     payload = {
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "system", "content": context}] + st.session_state.messages,
-        "temperature": 0.7
+        "temperature": 0.6
     }
 
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=10)
-        ans = response.json()['choices'][0]['message']['content']
+        if response.status_code == 200:
+            ans = response.json()['choices'][0]['message']['content']
+        else:
+            ans = "اعتذر منك عيوني، السيرفر عليه ضغط حالياً. تدلل، اترك رسالتك وسأرد عليك فوراً!"
+            
         st.session_state.messages.append({"role": "assistant", "content": ans})
-        st.rerun()
+        st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 عباس حيدر:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
-        st.error("عذراً عيوني، السيرفر مشغول. جرب مرة ثانية!")
+        st.error("السيرفر مشغول شوية عيوني، انتظر ثانية وجرب مرة ثانية!")
 
 # 6. الفوتر الثابت
 st.markdown("""
     <div class="fixed-footer">
         <div style="color:#facc15; font-size:13px; font-weight:bold; margin-bottom:5px;">
-            📍 بغداد - شارع الصناعة | 📞 07700000000 | 🚚 التوصيل 24/7
+            📍 بغداد - شارع الصناعة | 📞 07700000000 | 🚚 توصيل 24/7
         </div>
         <div class="footer-imgs">
             <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=200">
