@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 import requests
 import json
 import re
@@ -31,7 +31,7 @@ def send_to_excel(name, phone, order):
     try: requests.post(GOOGLE_SHEET_URL, data=json.dumps(payload), timeout=15)
     except: pass
 
-# 2. الهوية
+# 2. الهوية وعرض المحادثة
 st.markdown(f"<h3 style='text-align:center; color:#38bdf8;'>🛡️ {BRAND_NAME}</h3>", unsafe_allow_html=True)
 if "messages" not in st.session_state: st.session_state.messages = []
 
@@ -40,7 +40,7 @@ for msg in st.session_state.messages:
     bubble = "user-bubble" if msg["role"] == "user" else "abbas-bubble"
     st.markdown(f'<div class="chat-row {side}"><div class="bubble {bubble}"><b>{"👤 الزبون" if msg["role"]=="user" else "🎮 "+EXPERT_NAME}:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
-# 3. المنطق الحاسم
+# 3. المنطق البرمجي (الزبدة الصافية)
 if prompt := st.chat_input("سولف ويا عباس..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 الزبون:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
@@ -48,51 +48,48 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
 
-    # تعليمات استخراج إجبارية بالعربي
+    # تعليمات استخراج إجبارية وصارمة جداً
     extract_task = (
-        "You are an expert analyst. From the user text, extract 3 pieces of data in ARABIC: "
-        "1. name: The user's name (e.g., حيدر). Do not use 'Customer' or 'New'. "
-        "2. phone: The Iraqi phone number. "
-        "3. order: ONLY the specific product name mentioned. "
-        "Return ONLY clean JSON like: {'name': '...', 'phone': '...', 'order': '...'}"
+        "Analyze the text and return ONLY a JSON object with 3 fields in Arabic: "
+        "1. name: Extract only the human name (e.g., عباس). No other words. "
+        "2. phone: Extract the phone number. "
+        "3. order: Extract ONLY the product name (e.g., ايفون 13). Delete everything else."
     )
 
     try:
-        # أ: استخراج البيانات
+        # أ: استخراج البيانات (الفلترة)
         ex_res = requests.post(url, headers=headers, json={
             "model": "llama-3.1-8b-instant",
-            "messages": [{"role": "system", "content": extract_task}, {"role": "user", "content": prompt}]
+            "messages": [{"role": "system", "content": extract_instruction if 'extract_instruction' in locals() else extract_task}, {"role": "user", "content": prompt}]
         }, timeout=10)
         
         # ب: رد عباس الطبيعي
         chat_res = requests.post(url, headers=headers, json={
             "model": "llama-3.3-70b-versatile",
-            "messages": [{"role": "system", "content": f"أنت {EXPERT_NAME}، مساعد بغدادي ذكي. لا تسجل الطلب إلا إذا استلمت الاسم والرقم. إذا استلمتهم قل [تم تسجيل طلبك]."}] + st.session_state.messages,
+            "messages": [{"role": "system", "content": f"أنت {EXPERT_NAME}، مساعد مبيعات بغدادي مؤدب. لا تسجل الطلب إلا إذا استلمت الاسم والرقم. إذا استلمتهم قل [تم تسجيل طلبك]."}] + st.session_state.messages,
             "temperature": 0.6
         }, timeout=15)
 
         if chat_res.status_code == 200:
             ans = chat_res.json()['choices'][0]['message']['content']
             
-            # ج: الإرسال للإكسل حصراً عند وجود رقم الهاتف
+            # ج: الإرسال للإكسل عند وجود رقم هاتف
             phone_check = re.search(r'07\d{8,9}', prompt)
             if phone_check:
                 try:
-                    # تحليل الـ JSON المستخرج
                     raw_json = ex_res.json()['choices'][0]['message']['content']
                     data = json.loads(re.search(r'\{.*\}', raw_json, re.DOTALL).group())
                     
-                    # نرسل المستخرج فقط وبدون أي إضافات
+                    # نرسل الصافي فقط
                     send_to_excel(
-                        name=data.get('name', 'زبون غير معروف'),
+                        name=data.get('name', 'زبون'),
                         phone=phone_check.group(),
-                        order=data.get('order', 'منتج غير محدد')
+                        order=data.get('order', prompt[:20])
                     )
                 except:
-                    # إذا فشل الـ JSON، نرسل جزء من الرسالة الأصلية كاسم ومنتج
                     send_to_excel("زبون مباشر", phone_check.group(), prompt[:30])
 
             st.session_state.messages.append({"role": "assistant", "content": ans})
             st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 {EXPERT_NAME}:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
-        st.error("صارت مشكلة بالسيرفر، جرب مرة ثانية.")
+        st.error("السيرفر مشغول، جرب مرة ثانية.")
