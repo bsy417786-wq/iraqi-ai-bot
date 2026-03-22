@@ -11,7 +11,7 @@ GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzboWW6szwgFDiHOc9-n
 
 st.set_page_config(page_title=BRAND_NAME, page_icon="🤖", layout="centered")
 
-# --- التصميم المريح ---
+# --- التصميم ---
 design = """
     <style>
     #MainMenu, footer, header, .stDeployButton, [data-testid="stToolbar"], [data-testid="stStatusWidget"] { visibility: hidden; display: none !important; }
@@ -45,7 +45,7 @@ for msg in st.session_state.messages:
     label = "👤 الزبون" if msg["role"] == "user" else f"🎮 {EXPERT_NAME}"
     st.markdown(f'<div class="chat-row {side}"><div class="bubble {bubble}"><b>{label}:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
-# 5. المنطق البرمجي
+# 5. المنطق البرمجي (بشري 100%)
 if prompt := st.chat_input("سولف ويا عباس..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 الزبون:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
@@ -53,30 +53,14 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
-    # تعليمات عباس: كن مؤدب، ولا تطلب الرقم إذا موجود بالرسالة
     sys_instruction = (
-        f"أنت المساعد '{EXPERT_NAME}' لشركة '{BRAND_NAME}'. بلهجة بغدادية مؤدبة. "
-        "إذا ذكر الزبون الاسم والرقم، سجل الطلب فوراً وقل [تم تسجيل طلبك يا بطل]. "
-        "إذا نقص شيء، اطلبه بلباقة."
-    )
-    
-    # تعليمات الاستخراج الصارمة (بالعربية)
-    extract_instruction = (
-        "Extract data from user text in Arabic language ONLY. "
-        "Return JSON format: "
-        "1. name: extract user name. "
-        "2. phone: extract phone number starting with 07. "
-        "3. order: Extract ONLY the product name in Arabic (e.g., 'ايفون 15' or 'لابتوب ديل'). Do NOT write sentences."
+        f"أنت '{EXPERT_NAME}' من شركة '{BRAND_NAME}'. بلهجة بغدادية. "
+        "أهم قاعدة: لا تقل [تم تسجيل طلبك] إلا إذا استلمت الاسم ورقم الهاتف. "
+        "إذا استلمتهم، سجلهم فوراً."
     )
 
     try:
-        # 1. استخراج "الزبدة" بالعربية
-        extract_res = requests.post(url, headers=headers, json={
-            "model": "llama-3.1-8b-instant",
-            "messages": [{"role": "system", "content": extract_instruction}, {"role": "user", "content": prompt}]
-        }, timeout=7)
-        
-        # 2. رد عباس الطبيعي
+        # 1. رد عباس الطبيعي
         response = requests.post(url, headers=headers, json={
             "model": "llama-3.3-70b-versatile",
             "messages": [{"role": "system", "content": sys_instruction}] + st.session_state.messages,
@@ -86,25 +70,6 @@ if prompt := st.chat_input("سولف ويا عباس..."):
         if response.status_code == 200:
             ans = response.json()['choices'][0]['message']['content']
             
-            # 3. منطق الإرسال الذكي للإكسل (عند وجود رقم هاتف)
-            has_phone = re.search(r'07\d{8,9}', prompt) or re.search(r'07\d{8,9}', ans)
-            
-            if has_phone and "[تم تسجيل" in ans:
-                try:
-                    raw_data = extract_res.json()['choices'][0]['message']['content']
-                    json_match = re.search(r'\{.*\}', raw_data, re.DOTALL)
-                    if json_match:
-                        clean_json = json.loads(json_match.group())
-                        
-                        f_name = clean_json.get('name', 'زبون جديد')
-                        f_phone = clean_json.get('phone', 'بدون رقم')
-                        f_order = clean_json.get('order', prompt) # يرسل المنتج العربي
-                        
-                        send_to_excel(f_name, f_phone, f_order)
-                except:
-                    send_to_excel("زبون جديد", "07xxxxxxx", "طلب غير محدد")
-            
-            st.session_state.messages.append({"role": "assistant", "content": ans})
-            st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 {EXPERT_NAME}:</b><br>{ans}</div></div>', unsafe_allow_html=True)
-    except:
-        st.error("السيرفر مشغول.")
+            # 2. الإرسال للإكسل (عند وجود رقم هاتفي)
+            phone_match = re.search(r'07
+
