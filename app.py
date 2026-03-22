@@ -53,25 +53,24 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
-    # تعليمات عباس: كن مؤدب، شرح وافي، ولا تطلب الرقم إذا موجود بالرسالة
+    # تعليمات عباس: كن مؤدب، ولا تطلب الرقم إذا موجود بالرسالة
     sys_instruction = (
         f"أنت المساعد '{EXPERT_NAME}' لشركة '{BRAND_NAME}'. بلهجة بغدادية مؤدبة. "
-        "1. إذا ذكر الزبون اسمه ورقم هاتفه في الرسالة، سجل الطلب فوراً وقل [تم تسجيل طلبك يا بطل]. "
-        "2. إذا طلب شيئاً ولم يذكر الرقم أو الاسم، اطلبهم منه بلباقة. "
-        "3. جاوب على كل أسئلة الزبون بمرونة."
+        "إذا ذكر الزبون الاسم والرقم، سجل الطلب فوراً وقل [تم تسجيل طلبك يا بطل]. "
+        "إذا نقص شيء، اطلبه بلباقة."
     )
     
-    # تعليمات الاستخراج: استخراج "الزبدة" فقط للطلب
+    # تعليمات الاستخراج الصارمة (بالعربية)
     extract_instruction = (
-        "Analyze the user message. Extract: "
-        "1. Name (as a string) "
-        "2. Phone (as a string) "
-        "3. Order (Extract ONLY the product name, e.g., 'iPhone 15' instead of the whole sentence). "
-        "Return ONLY a clean JSON object."
+        "Extract data from user text in Arabic language ONLY. "
+        "Return JSON format: "
+        "1. name: extract user name. "
+        "2. phone: extract phone number starting with 07. "
+        "3. order: Extract ONLY the product name in Arabic (e.g., 'ايفون 15' or 'لابتوب ديل'). Do NOT write sentences."
     )
 
     try:
-        # 1. استخراج "الزبدة"
+        # 1. استخراج "الزبدة" بالعربية
         extract_res = requests.post(url, headers=headers, json={
             "model": "llama-3.1-8b-instant",
             "messages": [{"role": "system", "content": extract_instruction}, {"role": "user", "content": prompt}]
@@ -87,27 +86,25 @@ if prompt := st.chat_input("سولف ويا عباس..."):
         if response.status_code == 200:
             ans = response.json()['choices'][0]['message']['content']
             
-            # 3. منطق الإرسال الذكي للإكسل
-            has_phone = re.search(r'07\d{8,9}', prompt)
+            # 3. منطق الإرسال الذكي للإكسل (عند وجود رقم هاتف)
+            has_phone = re.search(r'07\d{8,9}', prompt) or re.search(r'07\d{8,9}', ans)
             
-            if has_phone:
+            if has_phone and "[تم تسجيل" in ans:
                 try:
-                    # تنظيف وتجهيز الـ JSON
                     raw_data = extract_res.json()['choices'][0]['message']['content']
                     json_match = re.search(r'\{.*\}', raw_data, re.DOTALL)
                     if json_match:
                         clean_json = json.loads(json_match.group())
                         
-                        # نرسل "الزبدة" فقط للإكسل
-                        send_to_excel(
-                            clean_json.get('name', 'زبون جديد'),
-                            clean_json.get('phone', '07xxxxxxx'),
-                            clean_json.get('order', 'طلب عام') # هنا صار يكتب بس المنتج
-                        )
+                        f_name = clean_json.get('name', 'زبون جديد')
+                        f_phone = clean_json.get('phone', 'بدون رقم')
+                        f_order = clean_json.get('order', prompt) # يرسل المنتج العربي
+                        
+                        send_to_excel(f_name, f_phone, f_order)
                 except:
                     send_to_excel("زبون جديد", "07xxxxxxx", "طلب غير محدد")
             
             st.session_state.messages.append({"role": "assistant", "content": ans})
             st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 {EXPERT_NAME}:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
-        st.error("السيرفر مشغول حالياً.")
+        st.error("السيرفر مشغول.")
