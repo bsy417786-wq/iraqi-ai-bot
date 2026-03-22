@@ -45,7 +45,7 @@ for msg in st.session_state.messages:
     label = "👤 الزبون" if msg["role"] == "user" else f"🎮 {EXPERT_NAME}"
     st.markdown(f'<div class="chat-row {side}"><div class="bubble {bubble}"><b>{label}:</b><br>{msg["content"]}</div></div>', unsafe_allow_html=True)
 
-# 5. المنطق البرمجي
+# 5. المنطق البرمجي (المعدل كلياً)
 if prompt := st.chat_input("سولف ويا عباس..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.markdown(f'<div class="chat-row user-row"><div class="bubble user-bubble"><b>👤 الزبون:</b><br>{prompt}</div></div>', unsafe_allow_html=True)
@@ -53,13 +53,19 @@ if prompt := st.chat_input("سولف ويا عباس..."):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {MY_KEY}", "Content-Type": "application/json"}
     
-    sys_instruction = (
-        f"أنت المساعد الذكي '{EXPERT_NAME}' من شركة '{BRAND_NAME}'. بلهجة بغدادية مؤدبة. "
-        "رد السلام وشرح المواصفات، وإذا قرر الزبون يطلب، اطلب الاسم والرقم بلباقة."
+    sys_instruction = f"أنت '{EXPERT_NAME}' بلهجة بغدادية مؤدبة. اطلب الاسم والرقم لتثبيت الحجز. إذا استلمتهم قل [تم تسجيل طلبك]."
+
+    # تعليمات استخراج قاسية وواضحة جداً
+    extract_instruction = (
+        "Strictly extract data from the text and return ONLY a JSON object. "
+        "rules: "
+        "1. 'name': Extract only the human name (e.g., 'عباس'). Remove any surrounding phrases. "
+        "2. 'phone': Extract only the numbers starting with 07. "
+        "3. 'order': Extract only the product name (e.g., 'iPhone 13 Pro Max'). Delete any instructions or extra text."
     )
 
     try:
-        # 1. رد عباس
+        # 1. رد عباس الطبيعي
         response = requests.post(url, headers=headers, json={
             "model": "llama-3.3-70b-versatile",
             "messages": [{"role": "system", "content": sys_instruction}] + st.session_state.messages,
@@ -69,21 +75,29 @@ if prompt := st.chat_input("سولف ويا عباس..."):
         if response.status_code == 200:
             ans = response.json()['choices'][0]['message']['content']
             
-            # 2. فحص الرقم والإرسال (هنا كان الخطأ وتم إصلاحه)
+            # 2. فحص الرقم
             phone_match = re.search(r'07\d{8,9}', prompt)
             
             if phone_match:
-                # استخراج الاسم فقط
+                # 3. الاستخراج الصافي (JSON)
                 extract_res = requests.post(url, headers=headers, json={
                     "model": "llama-3.1-8b-instant",
-                    "messages": [{"role": "system", "content": "Extract ONLY the name. If no name, write 'New Customer'."}, {"role": "user", "content": prompt}]
+                    "messages": [{"role": "system", "content": extract_instruction}, {"role": "user", "content": prompt}]
                 }, timeout=5)
                 
-                name_val = extract_res.json()['choices'][0]['message']['content'].strip()
-                
-                # إرسال الطلب بالتفصيل كما كتبه الزبون
-                send_to_excel(name_val, phone_match.group(), prompt)
-            
+                try:
+                    raw_json = extract_res.json()['choices'][0]['message']['content']
+                    data = json.loads(re.search(r'\{.*\}', raw_json, re.DOTALL).group())
+                    
+                    # نرسل الصافي فقط
+                    send_to_excel(
+                        name=data.get('name', 'زبون'),
+                        phone=data.get('phone', phone_match.group()),
+                        order=data.get('order', 'منتج غير محدد')
+                    )
+                except:
+                    send_to_excel("خطأ في الاستخراج", phone_match.group(), prompt[:20])
+
             st.session_state.messages.append({"role": "assistant", "content": ans})
             st.markdown(f'<div class="chat-row abbas-row"><div class="bubble abbas-bubble"><b>🎮 {EXPERT_NAME}:</b><br>{ans}</div></div>', unsafe_allow_html=True)
     except:
